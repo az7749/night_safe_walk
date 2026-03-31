@@ -1,70 +1,66 @@
 import 'package:flutter/material.dart';
 
 class BottomNavbar extends StatelessWidget {
-  final ValueChanged<int> onTap;
+  final int selectedIndex;
+  final Function(int) onTap;
+  final double height;
 
-  const BottomNavbar({super.key, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return BottomAppBar(
-      child: SizedBox(
-        height: 72, // 하단바 높이 확보
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            _NavButton(
-              icon: Icons.room_outlined,
-              label: '길안내',
-              onPressed: () => onTap(0),
-            ),
-            _NavButton(
-              icon: Icons.star_outline,
-              label: '즐겨찾기',
-              onPressed: () => onTap(1),
-            ),
-            _NavButton(
-              icon: Icons.menu,
-              label: '더보기',
-              onPressed: () => onTap(2),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _NavButton extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final VoidCallback onPressed;
-
-  const _NavButton({
-    required this.icon,
-    required this.label,
-    required this.onPressed,
+  const BottomNavbar({
+    super.key,
+    required this.selectedIndex,
+    required this.onTap,
+    required this.height,
   });
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onPressed,
-      borderRadius: BorderRadius.circular(12),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center, // 가운데 정렬
-          children: [
-            Icon(icon),
-            const SizedBox(height: 3),
-            Text(
-              label,
-              style: const TextStyle(fontSize: 14), // 글자 살짝 줄임
+    return Container(
+      height: height,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(0),
+        // boxShadow: const [
+        //   BoxShadow(
+        //     color: Colors.black12,
+        //     blurRadius: 12,
+        //     offset: Offset(0, 4),
+        //   ),
+        // ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _buildNavItem(icon: Icons.route, label: '길안내', index: 0),
+          _buildNavItem(icon: Icons.star, label: '즐겨찾기', index: 1),
+          _buildNavItem(icon: Icons.menu, label: '더보기', index: 2),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNavItem({
+    required IconData icon,
+    required String label,
+    required int index,
+  }) {
+    final bool isSelected = selectedIndex == index;
+
+    return GestureDetector(
+      onTap: () => onTap(index),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, color: isSelected ? Colors.blue : Colors.grey),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+              color: isSelected ? Colors.blue : Colors.grey,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

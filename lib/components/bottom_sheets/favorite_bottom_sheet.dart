@@ -6,31 +6,45 @@ class FavoriteBottomSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: MediaQuery.of(context).size.height * 0.45,
       padding: const EdgeInsets.all(20),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(28),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black12,
+            blurRadius: 12,
+            offset: Offset(0, -2),
+          ),
+        ],
+      ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(width: 40, child: Divider(thickness: 4)),
+          Center(
+            child: Container(
+              width: 50,
+              height: 5,
+              decoration: BoxDecoration(
+                color: Colors.grey,
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+          ),
           const SizedBox(height: 20),
-          ListTile(
-            leading: const Icon(Icons.settings),
-            title: const Text('설정'),
-            onTap: () {},
+          const Text(
+            '즐겨찾기',
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+            ),
           ),
-          ListTile(
-            leading: const Icon(Icons.person),
-            title: const Text('마이페이지'),
-            onTap: () {},
-          ),
-          ListTile(
-            leading: const Icon(Icons.info),
-            title: const Text('앱 정보'),
-            onTap: () {},
-          ),
-          ListTile(
-            leading: const Icon(Icons.logout),
-            title: const Text('로그아웃'),
-            onTap: () {},
+          const SizedBox(height: 12),
+          const Text(
+            '집, 학교, 자주 가는 장소 목록이 여기에 들어갈 예정입니다.',
+            style: TextStyle(fontSize: 16),
           ),
         ],
       ),
