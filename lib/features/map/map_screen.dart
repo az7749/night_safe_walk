@@ -1,18 +1,29 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_naver_map/flutter_naver_map.dart';
 
 class MapScreen extends StatelessWidget {
   const MapScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: Colors.grey[200],
-      child: const Center(
-        child: Text(
-          '여기에 지도 화면이 들어갈 예정',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+    const initialPosition = NLatLng(36.6424, 127.4890); // 청주 예시
+
+    return NaverMap(
+      options: const NaverMapViewOptions(
+        initialCameraPosition: NCameraPosition(
+          target: initialPosition,
+          zoom: 14,
         ),
       ),
+      onMapReady: (controller) async {
+        final marker = NMarker(
+          id: 'marker_1',
+          position: initialPosition,
+          caption: const NOverlayCaption(text: '현재 테스트 위치'),
+        );
+
+        controller.addOverlay(marker);
+      },
     );
   }
 }
