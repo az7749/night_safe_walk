@@ -3,6 +3,7 @@ import '../../components/bottom_navbar.dart';
 import '../../components/bottom_sheets/favorite_bottom_sheet.dart';
 import '../../components/bottom_sheets/guide_bottom_sheet.dart';
 import '../../components/bottom_sheets/more_bottom_sheet.dart';
+import '../../components/map_search_bar.dart';
 import '../map/map_screen.dart';
 
 class MainScreen extends StatefulWidget {
@@ -46,6 +47,17 @@ class _MainScreenState extends State<MainScreen> {
       body: Stack(
         children: [
           const Positioned.fill(child: MapScreen()),
+
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: MapSearchBar(
+              onTap: () {
+                debugPrint('검색창 클릭');
+              },
+            ),
+          ),
 
           AnimatedPositioned(
             duration: const Duration(milliseconds: 300),
