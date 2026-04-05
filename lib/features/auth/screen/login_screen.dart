@@ -72,8 +72,16 @@ class _LoginScreen extends State<LoginScreen> {
                   ),
                 ),
               ),
-              SizedBox(height: 16),
+              SizedBox(height: 30),
               // 비밀번호 입력창
+              const Text(
+                '비밀번호',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
               TextField(
                 decoration: InputDecoration(
                   filled: true,
@@ -97,6 +105,22 @@ class _LoginScreen extends State<LoginScreen> {
                   ),
                 ),
               ),
+              SizedBox(height: 5),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton(
+                  onPressed: () {},
+                  style: TextButton.styleFrom(
+                    padding: EdgeInsets.zero,
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  child: Text(
+                    '비밀번호를 잊으셨나요?',
+                    style: TextStyle(fontSize: 14, color: Colors.blue),
+                  ),
+                ),
+              ),
               SizedBox(height: 16),
               // 로그인 버튼
               SizedBox(
@@ -105,21 +129,29 @@ class _LoginScreen extends State<LoginScreen> {
                 child: ElevatedButton(
                   onPressed: handleLogin,
                   style: ElevatedButton.styleFrom(
+                    backgroundColor: Color(0xFF6546FF),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(24),
                     ),
                   ),
-                  child: Text('로그인'),
+                  child: Text('로그인', style: TextStyle(color: Colors.white)),
                 ),
               ),
-              TextButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => SignUpScreen()),
-                  );
-                },
-                child: Text('회원가입'),
+
+              Center(
+                child: TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => SignUpScreen()),
+                    );
+                  },
+
+                  child: Text(
+                    '회원가입',
+                    style: TextStyle(fontSize: 14, color: Colors.blue),
+                  ),
+                ),
               ),
             ],
           ),

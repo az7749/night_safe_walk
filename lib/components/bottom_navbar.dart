@@ -50,7 +50,7 @@ class BottomNavbar extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, color: isSelected ? Colors.blue : Colors.grey),
+          Icon(icon, color: Colors.grey),
           const SizedBox(height: 4),
           Text(
             label,
