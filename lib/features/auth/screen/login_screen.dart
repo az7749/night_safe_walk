@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:night_safe_walk/features/auth/screen/signup_screen.dart';
-import '../../../components/password_text_field.dart';
 import '../../../components/app_text_field.dart';
+import '../../../components/password_text_field.dart';
+import '../logic/auth_logic.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -22,8 +23,17 @@ class _LoginScreen extends State<LoginScreen> {
   }
 
   void handleLogin() {
-    final userid = useridController.text;
-    final password = passwordController.text;
+    final userid = useridController.text.trim();
+    final password = passwordController.text.trim();
+
+    final message = AuthLogic.validateLogin(id: userid, password: password);
+
+    if (message != null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
+      return;
+    }
 
     debugPrint('아이디 : $userid');
     debugPrint('비밀번호 : $password');

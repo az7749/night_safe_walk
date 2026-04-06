@@ -2,16 +2,14 @@ import 'package:flutter/material.dart';
 
 class AppTextField extends StatefulWidget {
   final TextEditingController controller;
-  final String? errorText;
-  final bool obscureText;
   final TextInputType? keyboardType;
+  final bool enabled;
 
   const AppTextField({
     super.key,
     required this.controller,
-    this.errorText,
-    this.obscureText = false,
     this.keyboardType,
+    this.enabled = true,
   });
 
   @override
@@ -29,7 +27,9 @@ class _AppTextFieldState extends State<AppTextField> {
   }
 
   void _refresh() {
-    setState(() {});
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   @override
@@ -49,7 +49,7 @@ class _AppTextFieldState extends State<AppTextField> {
     }
 
     return IconButton(
-      icon: const Icon(Icons.close),
+      icon: const Icon(Icons.cancel, color: Color(0xFF5F6368)),
       onPressed: () {
         widget.controller.clear();
       },
@@ -61,26 +61,30 @@ class _AppTextFieldState extends State<AppTextField> {
     return TextField(
       controller: widget.controller,
       focusNode: _focusNode,
-      obscureText: widget.obscureText,
       keyboardType: widget.keyboardType,
+      enabled: widget.enabled,
       decoration: InputDecoration(
         filled: true,
         fillColor: const Color(0xFFF1F1F1),
         suffixIcon: _buildSuffixIcon(),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 24,
-          vertical: 12,
+          vertical: 18,
         ),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(20),
           borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(20),
           borderSide: BorderSide.none,
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(20),
+          borderSide: BorderSide.none,
+        ),
+        disabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(20),
           borderSide: BorderSide.none,
         ),
       ),

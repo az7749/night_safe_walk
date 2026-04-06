@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:night_safe_walk/features/auth/logic/auth_logic.dart';
 import '../../../components/password_text_field.dart';
 import '../../../components/app_text_field.dart';
+import '../logic/auth_logic.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -18,14 +19,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final TextEditingController passwordCheckController = TextEditingController();
 
   void handleSignUp() {
-    final userid = useridController.text;
-    final name = nameController.text;
-    final phone = phoneController.text;
-    final password = passwordController.text;
-    final passwordCheck = passwordCheckController.text;
+    final userid = useridController.text.trim();
+    final name = nameController.text.trim();
+    final phone = phoneController.text.trim();
+    final password = passwordController.text.trim();
+    final passwordCheck = passwordCheckController.text.trim();
 
     final message = AuthLogic.validateSignUp(
       id: userid,
+      name: name,
+      phone: phone,
       password: password,
       passwordCheck: passwordCheck,
     );
@@ -39,15 +42,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(const SnackBar(content: Text('회원가입 성공')));
+    ).showSnackBar(const SnackBar(content: Text('회원가입이 완료되었습니다.')));
 
-    debugPrint('아이디 : $userid');
-    debugPrint('이름 : $name');
-    debugPrint('전화번호 : $phone');
-    debugPrint('비밀번호 : $password');
-    debugPrint('비밀번호 확인 : $passwordCheck');
-
-    // Navigator.pop(context);
+    debugPrint('회원가입 진행');
+    debugPrint('아이디: $userid');
+    debugPrint('이름: $name');
+    debugPrint('전화번호: $phone');
+    debugPrint('비밀번호: $password');
+    debugPrint('비밀번호확인: $passwordCheck');
   }
 
   @override
@@ -94,7 +96,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
               ),
               // 아이디 입력창
               const SizedBox(height: 8),
-              AppTextField(controller: emailController, errorText: emailError),
+              AppTextField(controller: useridController),
 
               SizedBox(height: 30),
               // 이름 입력창

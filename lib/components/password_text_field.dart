@@ -2,9 +2,13 @@ import 'package:flutter/material.dart';
 
 class PasswordTextField extends StatefulWidget {
   final TextEditingController controller;
-  final String? hintText;
+  final bool enabled;
 
-  const PasswordTextField({super.key, required this.controller, this.hintText});
+  const PasswordTextField({
+    super.key,
+    required this.controller,
+    this.enabled = true,
+  });
 
   @override
   State<PasswordTextField> createState() => _PasswordTextFieldState();
@@ -22,7 +26,9 @@ class _PasswordTextFieldState extends State<PasswordTextField> {
   }
 
   void _refresh() {
-    setState(() {});
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   @override
@@ -43,7 +49,7 @@ class _PasswordTextFieldState extends State<PasswordTextField> {
 
     if (isTyping) {
       return IconButton(
-        icon: const Icon(Icons.close),
+        icon: const Icon(Icons.cancel, color: Color(0xFF5F6368)),
         onPressed: () {
           widget.controller.clear();
         },
@@ -51,7 +57,10 @@ class _PasswordTextFieldState extends State<PasswordTextField> {
     }
 
     return IconButton(
-      icon: Icon(_obscureText ? Icons.visibility_off : Icons.visibility),
+      icon: Icon(
+        _obscureText ? Icons.visibility : Icons.visibility_off,
+        color: const Color(0xFF5F6368),
+      ),
       onPressed: () {
         setState(() {
           _obscureText = !_obscureText;
@@ -66,24 +75,29 @@ class _PasswordTextFieldState extends State<PasswordTextField> {
       controller: widget.controller,
       focusNode: _focusNode,
       obscureText: _obscureText,
+      enabled: widget.enabled,
       decoration: InputDecoration(
         filled: true,
         fillColor: const Color(0xFFF1F1F1),
         suffixIcon: _buildSuffixIcon(),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 24,
-          vertical: 12,
+          vertical: 18,
         ),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(20),
           borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(20),
           borderSide: BorderSide.none,
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(20),
+          borderSide: BorderSide.none,
+        ),
+        disabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(20),
           borderSide: BorderSide.none,
         ),
       ),
