@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:night_safe_walk/features/auth/signup_screen.dart';
+import 'package:night_safe_walk/features/auth/screen/signup_screen.dart';
+import '../../../components/password_text_field.dart';
+import '../../../components/app_text_field.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -48,30 +50,7 @@ class _LoginScreen extends State<LoginScreen> {
                 ),
               ),
               // 아이디 입력창
-              const SizedBox(height: 8),
-              TextField(
-                decoration: InputDecoration(
-                  filled: true,
-                  fillColor: const Color(0xFFF1F1F1),
-                  // suffixIcon: const Icon(Icons.cancel),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 12,
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide.none,
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide.none,
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-              ),
+              AppTextField(controller: useridController),
               SizedBox(height: 30),
               // 비밀번호 입력창
               const Text(
@@ -82,29 +61,7 @@ class _LoginScreen extends State<LoginScreen> {
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              TextField(
-                decoration: InputDecoration(
-                  filled: true,
-                  fillColor: const Color(0xFFF1F1F1),
-                  suffixIcon: const Icon(Icons.visibility),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 12,
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide.none,
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide.none,
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-              ),
+              PasswordTextField(controller: passwordController),
               SizedBox(height: 5),
               Align(
                 alignment: Alignment.centerLeft,

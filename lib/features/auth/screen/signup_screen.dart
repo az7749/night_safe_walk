@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:night_safe_walk/features/auth/logic/auth_logic.dart';
+import '../../../components/password_text_field.dart';
+import '../../../components/app_text_field.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -20,6 +23,23 @@ class _SignUpScreenState extends State<SignUpScreen> {
     final phone = phoneController.text;
     final password = passwordController.text;
     final passwordCheck = passwordCheckController.text;
+
+    final message = AuthLogic.validateSignUp(
+      id: userid,
+      password: password,
+      passwordCheck: passwordCheck,
+    );
+
+    if (message != null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
+      return;
+    }
+
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('회원가입 성공')));
 
     debugPrint('아이디 : $userid');
     debugPrint('이름 : $name');
@@ -74,29 +94,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
               ),
               // 아이디 입력창
               const SizedBox(height: 8),
-              TextField(
-                decoration: InputDecoration(
-                  filled: true,
-                  fillColor: const Color(0xFFF1F1F1),
-                  // suffixIcon: const Icon(Icons.cancel),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 12,
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide.none,
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide.none,
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-              ),
+              AppTextField(controller: emailController, errorText: emailError),
 
               SizedBox(height: 30),
               // 이름 입력창
@@ -108,28 +106,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              TextField(
-                decoration: InputDecoration(
-                  filled: true,
-                  fillColor: const Color(0xFFF1F1F1),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 12,
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide.none,
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide.none,
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-              ),
+              AppTextField(controller: nameController),
 
               SizedBox(height: 30),
               //
@@ -141,28 +118,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              TextField(
-                decoration: InputDecoration(
-                  filled: true,
-                  fillColor: const Color(0xFFF1F1F1),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 12,
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide.none,
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide.none,
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-              ),
+              AppTextField(controller: phoneController),
               SizedBox(height: 30),
               // 비밀번호 입력창
               const Text(
@@ -173,29 +129,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              TextField(
-                decoration: InputDecoration(
-                  filled: true,
-                  fillColor: const Color(0xFFF1F1F1),
-                  suffixIcon: const Icon(Icons.visibility),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 12,
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide.none,
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide.none,
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-              ),
+              PasswordTextField(controller: passwordController),
 
               SizedBox(height: 30),
               // 비밀번호 확인 입력창
@@ -207,29 +141,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              TextField(
-                decoration: InputDecoration(
-                  filled: true,
-                  fillColor: const Color(0xFFF1F1F1),
-                  suffixIcon: const Icon(Icons.visibility),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 12,
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide.none,
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide.none,
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-              ),
+              PasswordTextField(controller: passwordCheckController),
+
               SizedBox(height: 50),
               // 회원가입 버튼
               SizedBox(
