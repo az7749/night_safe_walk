@@ -3,11 +3,7 @@ import 'package:night_safe_walk/features/auth/logic/auth_logic.dart';
 import 'package:night_safe_walk/service/auth_service.dart';
 import '../../../components/password_text_field.dart';
 import '../../../components/app_text_field.dart';
-<<<<<<< HEAD
-import '../logic/auth_logic.dart';
-=======
 import 'dart:async';
->>>>>>> 1155e49 (회원가입/로그인 서버 연동)
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -24,12 +20,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final TextEditingController birthController = TextEditingController();
   final TextEditingController passwordCheckController = TextEditingController();
 
-<<<<<<< HEAD
-  void handleSignUp() {
-    final userid = useridController.text.trim();
-    final name = nameController.text.trim();
-    final phone = phoneController.text.trim();
-=======
   String? selectedGender;
 
   String? userIdMessage;
@@ -43,7 +33,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
     final name = nameController.text.trim();
     final phone = phoneController.text.trim();
     final birth = birthController.text.trim();
->>>>>>> 1155e49 (회원가입/로그인 서버 연동)
     final password = passwordController.text.trim();
     final passwordCheck = passwordCheckController.text.trim();
 
@@ -62,24 +51,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
       return;
     }
 
-<<<<<<< HEAD
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('회원가입이 완료되었습니다.')));
-
-    debugPrint('회원가입 진행');
-    debugPrint('아이디: $userid');
-    debugPrint('이름: $name');
-    debugPrint('전화번호: $phone');
-    debugPrint('비밀번호: $password');
-    debugPrint('비밀번호확인: $passwordCheck');
-=======
     try {
       final result = await AuthService.signUp(
         userid: userid,
         name: name,
         phone: phone,
-        birth_date: birth,
+        birth: birth,
         gender: selectedGender!,
         password: password,
       );
@@ -105,7 +82,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
     debugPrint('비밀번호 확인 : $passwordCheck');
 
     // Navigator.pop(context);
->>>>>>> 1155e49 (회원가입/로그인 서버 연동)
   }
 
   @override
@@ -144,86 +120,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
               children: [
                 const SizedBox(height: 30),
 
-<<<<<<< HEAD
-              const Text(
-                '아이디',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              // 아이디 입력창
-              const SizedBox(height: 8),
-              AppTextField(controller: useridController),
-
-              SizedBox(height: 30),
-              // 이름 입력창
-              const Text(
-                '이름',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              AppTextField(controller: nameController),
-
-              SizedBox(height: 30),
-              //
-              const Text(
-                '전화번호',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              AppTextField(controller: phoneController),
-              SizedBox(height: 30),
-              // 비밀번호 입력창
-              const Text(
-                '비밀번호',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              PasswordTextField(controller: passwordController),
-
-              SizedBox(height: 30),
-              // 비밀번호 확인 입력창
-              const Text(
-                '비밀번호 확인',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              PasswordTextField(controller: passwordCheckController),
-
-              SizedBox(height: 50),
-              // 회원가입 버튼
-              SizedBox(
-                height: 50,
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: handleSignUp,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFF6546FF),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(24),
-                    ),
-=======
                 const Text(
                   '아이디',
                   style: TextStyle(
                     fontSize: 14,
                     color: Colors.grey,
                     fontWeight: FontWeight.w600,
->>>>>>> 1155e49 (회원가입/로그인 서버 연동)
                   ),
                 ),
                 // 아이디 입력창

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 class PasswordTextField extends StatefulWidget {
   final TextEditingController controller;
-<<<<<<< HEAD
   final bool enabled;
 
   const PasswordTextField({
@@ -10,10 +9,6 @@ class PasswordTextField extends StatefulWidget {
     required this.controller,
     this.enabled = true,
   });
-=======
-
-  const PasswordTextField({super.key, required this.controller});
->>>>>>> 1155e49 (회원가입/로그인 서버 연동)
 
   @override
   State<PasswordTextField> createState() => _PasswordTextFieldState();
