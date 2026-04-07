@@ -3,11 +3,8 @@ import 'package:night_safe_walk/features/auth/logic/auth_logic.dart';
 import 'package:night_safe_walk/service/auth_service.dart';
 import '../../../components/password_text_field.dart';
 import '../../../components/app_text_field.dart';
-<<<<<<< HEAD
 import '../logic/auth_logic.dart';
-=======
 import 'dart:async';
->>>>>>> 1155e49 (회원가입/로그인 서버 연동)
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -24,26 +21,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final TextEditingController birthController = TextEditingController();
   final TextEditingController passwordCheckController = TextEditingController();
 
-<<<<<<< HEAD
   void handleSignUp() {
     final userid = useridController.text.trim();
     final name = nameController.text.trim();
     final phone = phoneController.text.trim();
-=======
-  String? selectedGender;
-
-  String? userIdMessage;
-  bool isUserIdAvailable = false;
-  bool isCheckingUserId = false;
-
-  Timer? _userIdDebounce;
-
-  Future<void> handleSignUp() async {
-    final userid = useridController.text.trim();
-    final name = nameController.text.trim();
-    final phone = phoneController.text.trim();
-    final birth = birthController.text.trim();
->>>>>>> 1155e49 (회원가입/로그인 서버 연동)
     final password = passwordController.text.trim();
     final passwordCheck = passwordCheckController.text.trim();
 
@@ -62,7 +43,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
       return;
     }
 
-<<<<<<< HEAD
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(const SnackBar(content: Text('회원가입이 완료되었습니다.')));
@@ -73,39 +53,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
     debugPrint('전화번호: $phone');
     debugPrint('비밀번호: $password');
     debugPrint('비밀번호확인: $passwordCheck');
-=======
-    try {
-      final result = await AuthService.signUp(
-        userid: userid,
-        name: name,
-        phone: phone,
-        birth: birth,
-        gender: selectedGender!,
-        password: password,
-      );
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(result['message'])));
-
-      if (result['success'] == true) {
-        Navigator.pop(context);
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('서버 연결 중 오류가 발생했습니다.')));
-    }
-
-    debugPrint('아이디 : $userid');
-    debugPrint('이름 : $name');
-    debugPrint('전화번호 : $phone');
-    debugPrint('생년월일 : $birth');
-    debugPrint('성별 : $selectedGender');
-    debugPrint('비밀번호 : $password');
-    debugPrint('비밀번호 확인 : $passwordCheck');
-
-    // Navigator.pop(context);
->>>>>>> 1155e49 (회원가입/로그인 서버 연동)
   }
 
   @override
@@ -144,7 +91,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
               children: [
                 const SizedBox(height: 30),
 
-<<<<<<< HEAD
               const Text(
                 '아이디',
                 style: TextStyle(
@@ -216,14 +162,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(24),
                     ),
-=======
-                const Text(
-                  '아이디',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey,
-                    fontWeight: FontWeight.w600,
->>>>>>> 1155e49 (회원가입/로그인 서버 연동)
                   ),
                 ),
                 // 아이디 입력창
