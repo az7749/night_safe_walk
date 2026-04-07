@@ -3,7 +3,9 @@ import 'package:flutter_naver_map/flutter_naver_map.dart';
 import 'package:geolocator/geolocator.dart';
 
 class MapScreen extends StatefulWidget {
-  const MapScreen({super.key});
+  final double buttonBottom;
+
+  const MapScreen({super.key, required this.buttonBottom});
 
   @override
   State<MapScreen> createState() => _MapScreenState();
@@ -63,7 +65,7 @@ class _MapScreenState extends State<MapScreen> {
 
     await _mapController!.updateCamera(cameraUpdate);
 
-    final locationOverlay = await _mapController!.getLocationOverlay();
+    final locationOverlay = _mapController!.getLocationOverlay();
     locationOverlay.setIsVisible(true);
     locationOverlay.setPosition(currentLatLng);
   }
@@ -83,12 +85,21 @@ class _MapScreenState extends State<MapScreen> {
             _mapController = controller;
           },
         ),
-        Positioned(
+        AnimatedPositioned(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
           right: 16,
-          bottom: 120,
+          bottom: widget.buttonBottom,
           child: FloatingActionButton(
+            mini: true,
             onPressed: _moveToCurrentLocation,
-            child: const Icon(Icons.my_location),
+            backgroundColor: Colors.white,
+            foregroundColor: const Color(0xFF6546FF),
+            elevation: 3,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: const Icon(Icons.my_location, size: 20),
           ),
         ),
       ],

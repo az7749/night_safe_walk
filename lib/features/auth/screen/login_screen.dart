@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:night_safe_walk/features/auth/screen/signup_screen.dart';
-import '../../../components/app_text_field.dart';
-import '../../../components/password_text_field.dart';
-import '../logic/auth_logic.dart';
+import 'package:night_safe_walk/components/app_text_field.dart';
+import 'package:night_safe_walk/components/password_text_field.dart';
+import 'package:night_safe_walk/features/auth/logic/auth_logic.dart';
+import 'package:night_safe_walk/features/main/main_screen.dart';
+import 'package:night_safe_walk/service/auth_service.dart';
+import 'dart:async';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -15,14 +18,7 @@ class _LoginScreen extends State<LoginScreen> {
   final TextEditingController useridController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
-  @override
-  void dispose() {
-    useridController.dispose();
-    passwordController.dispose();
-    super.dispose();
-  }
-
-  void handleLogin() {
+  Future<void> handleLogin() async {
     final userid = useridController.text.trim();
     final password = passwordController.text.trim();
 
@@ -35,8 +31,36 @@ class _LoginScreen extends State<LoginScreen> {
       return;
     }
 
+    try {
+      final result = await AuthService.login(
+        userid: userid,
+        password: password,
+      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(result['message'])));
+
+      if (result['success'] == true) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const MainScreen()),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('서버 연결 중 오류가 발생했습니다.')));
+    }
+
     debugPrint('아이디 : $userid');
     debugPrint('비밀번호 : $password');
+  }
+
+  @override
+  void dispose() {
+    useridController.dispose();
+    passwordController.dispose();
+    super.dispose();
   }
 
   @override

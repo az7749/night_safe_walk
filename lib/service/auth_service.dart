@@ -42,4 +42,18 @@ class AuthService {
     );
     return jsonDecode(response.body);
   }
+
+  static Future<Map<String, dynamic>> login({
+    required String userid,
+    required String password,
+  }) async {
+    final url = Uri.parse('$baseUrl/login');
+
+    final response = await http.post(
+      url,
+      headers: {'content-type': 'application/json'},
+      body: jsonEncode({'login_id': userid, 'password': password}),
+    );
+    return jsonDecode(response.body);
+  }
 }

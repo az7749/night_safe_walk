@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:night_safe_walk/features/auth/logic/auth_logic.dart';
 import 'package:night_safe_walk/service/auth_service.dart';
-import '../../../components/password_text_field.dart';
-import '../../../components/app_text_field.dart';
+import 'package:night_safe_walk/components/app_text_field.dart';
+import 'package:night_safe_walk/components/password_text_field.dart';
 import 'dart:async';
 
 class SignUpScreen extends StatefulWidget {

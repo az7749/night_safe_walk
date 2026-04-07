@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
 import 'package:night_safe_walk/features/auth/screen/login_screen.dart';
-import 'package:night_safe_walk/features/main/main_screen.dart';
 // import 'package:night_safe_walk/features/main/main_screen.dart';
 
 void main() async {

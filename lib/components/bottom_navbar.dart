@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 
 class BottomNavbar extends StatelessWidget {
   final int selectedIndex;
+  final bool showSheet;
   final Function(int) onTap;
   final double height;
 
   const BottomNavbar({
     super.key,
     required this.selectedIndex,
+    required this.showSheet,
     required this.onTap,
     required this.height,
   });
@@ -43,19 +45,19 @@ class BottomNavbar extends StatelessWidget {
     required String label,
     required int index,
   }) {
-    final bool isSelected = selectedIndex == index;
+    final bool isSelected = showSheet && selectedIndex == index;
 
     return GestureDetector(
       onTap: () => onTap(index),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, color: Colors.grey),
+          Icon(icon, color: isSelected ? const Color(0xFF6546FF) : Colors.grey),
           const SizedBox(height: 4),
           Text(
             label,
             style: TextStyle(
-              color: isSelected ? Colors.blue : Colors.grey,
+              color: isSelected ? const Color(0xFF6546FF) : Colors.grey,
               fontSize: 13,
               fontWeight: FontWeight.w600,
             ),

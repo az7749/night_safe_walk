@@ -46,8 +46,17 @@ class _MainScreenState extends State<MainScreen> {
     return Scaffold(
       body: Stack(
         children: [
-          const Positioned.fill(child: MapScreen()),
-
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: navBarHeight,
+            child: MapScreen(
+              buttonBottom: showSheet
+                  ? sheetHeight + navBarHeight - 70
+                  : navBarHeight - 70,
+            ),
+          ),
           Positioned(
             top: 0,
             left: 0,
@@ -77,6 +86,7 @@ class _MainScreenState extends State<MainScreen> {
             bottom: 0,
             child: BottomNavbar(
               selectedIndex: selectedIndex,
+              showSheet: showSheet,
               onTap: onTapBottomNav,
               height: navBarHeight,
             ),
