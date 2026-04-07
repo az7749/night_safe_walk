@@ -79,7 +79,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         userid: userid,
         name: name,
         phone: phone,
-        birth_date: birth,
+        birth: birth,
         gender: selectedGender!,
         password: password,
       );
