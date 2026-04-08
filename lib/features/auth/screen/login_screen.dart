@@ -3,8 +3,8 @@ import 'package:night_safe_walk/features/auth/screen/signup_screen.dart';
 import 'package:night_safe_walk/components/app_text_field.dart';
 import 'package:night_safe_walk/components/password_text_field.dart';
 import 'package:night_safe_walk/features/auth/logic/auth_logic.dart';
+import 'package:night_safe_walk/features/auth/service/auth_service.dart';
 import 'package:night_safe_walk/features/main/main_screen.dart';
-import 'package:night_safe_walk/service/auth_service.dart';
 import 'dart:async';
 
 class LoginScreen extends StatefulWidget {
