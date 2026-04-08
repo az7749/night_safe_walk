@@ -114,7 +114,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
-            padding: EdgeInsets.all(24),
+            padding: const EdgeInsets.all(24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -196,7 +196,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             ),
                           ),
                           Container(
-                            height: 48,
+                            height: 52,
                             padding: const EdgeInsets.symmetric(horizontal: 20),
                             decoration: BoxDecoration(
                               color: const Color(0xFFF1F1F1),
