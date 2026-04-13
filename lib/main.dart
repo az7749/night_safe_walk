@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
 import 'package:night_safe_walk/features/auth/screen/login_screen.dart';
+import 'package:night_safe_walk/features/main/main_screen.dart';
 // import 'package:night_safe_walk/features/main/main_screen.dart';
 
 void main() async {
@@ -25,7 +26,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: '야간안심보행플랫폼',
       theme: ThemeData(primarySwatch: Colors.blue),
-      home: const LoginScreen(),
+      home: const MainScreen(),
     );
   }
 }

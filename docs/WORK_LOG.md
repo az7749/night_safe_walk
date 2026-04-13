@@ -1,29 +1,53 @@
-# Work Log
+# 작업 로그
 
-Use this file to carry project memory across different computers. Update it briefly after meaningful work so Codex can continue from the same context after a GitHub pull.
+이 문서는 다른 컴퓨터나 다른 세션에서도 프로젝트 맥락을 이어가기 위한 기록용 문서이다.  
+의미 있는 작업이나 결정이 생겼을 때 짧게 갱신한다.
 
-## Project Anchor
+## 프로젝트 기준점
 
-Night Safe Walk is a map-first Flutter app and spatial backend for visualizing road-segment safety and recommending safe nighttime walking routes.
+Night Safe Walk는 도로 구간별 안전도를 시각화하고, 야간 보행자를 위한 안심 경로를 추천하는 지도 중심 Flutter 앱과 공간 분석 백엔드 프로젝트이다.
 
-Always use `docs/PROJECT_CONTEXT.md` as the source of truth for the project theme and direction.
+프로젝트의 큰 방향과 핵심 철학은 항상 `docs/PROJECT_CONTEXT.md`를 기준으로 본다.
 
 ## 2026-04-08
 
-- Pulled latest Flutter app changes from GitHub in `night_safe_walk`.
-- Pulled latest server changes from GitHub in `safe_walk_server`.
-- Confirmed project theme and feature direction:
-  - Public safety facility data plus pedestrian road network data
-  - Road-segment safety score visualization
-  - Safety-aware walking route recommendation
-  - Map-centered Flutter UI with bottom navigation and bottom sheets
-- Added this documentation structure:
+- `night_safe_walk` Flutter 앱 저장소의 최신 변경 사항을 GitHub에서 가져왔다.
+- `safe_walk_server` 서버 저장소의 최신 변경 사항을 GitHub에서 가져왔다.
+- 프로젝트의 주제와 기능 방향을 다시 확인했다.
+  - 공공 안전 시설물 데이터와 보행 도로망 데이터를 결합
+  - 도로 구간별 안전 점수 시각화
+  - 안전도를 반영한 보행 경로 추천
+  - 하단 네비게이션과 바텀시트를 포함한 지도 중심 Flutter UI
+- 문서 구조를 추가했다.
   - `docs/PROJECT_CONTEXT.md`
   - `docs/WORK_LOG.md`
 
-## Next Work Candidates
+## 2026-04-13
 
-- Review current Flutter auth flow and remove unsafe debug password logging if still present.
-- Check server login API contract against `AuthService.login`.
-- Define map API endpoints for facilities, safety road segments, and route search.
-- Start a small vertical slice: show basic facility or road safety data on the map.
+- Flask 서버와 Flutter 네이버 지도 사이의 실시간 시설물 마커 로딩 흐름을 점검했다.
+- 시설물 API 응답 자체는 정상적으로 동작하지만, 한 번에 너무 많은 마커를 불러오면 지도 오버레이 부담이 커진다는 점을 확인했다.
+- 현재 지도 마커 로딩 전략을 다음과 같이 정리했다.
+  - 카메라 이동이 끝난 뒤 마커를 다시 조회한다.
+  - 현재 화면에 보이는 지도 bounds를 주요 조회 범위로 사용한다.
+  - 기본적으로 도시 전체 마커를 한 번에 불러오지 않는다.
+  - 줌 레벨이 낮을 때는 마커 밀도를 줄이거나 클러스터링을 고려한다.
+- 첫 번째 실시간 지도 대상 시설물은 다음 두 종류로 잡았다.
+  - 보안등
+  - 가로등
+- 기능 구현 현황을 추적하기 위해 `docs/FEATURE_STATUS.md` 문서를 추가했다.
+- `docs/PROJECT_CONTEXT.md`에 지도 마커 로딩 전략을 문서화했다.
+  - 카메라 이동 종료 후 재조회
+  - 현재 화면 bounds 기준 조회
+  - 낮은 줌 레벨에서 밀도 축소 또는 클러스터링 고려
+- 현재 지도 디버깅 결과를 확인했다.
+  - 적은 수의 마커는 정상적으로 렌더링된다.
+  - 마커 수가 많아지면 현재의 위젯 기반 마커 방식이 부담을 받기 시작한다.
+  - 도시 전체 시설물을 기본값으로 불러오는 방식은 적절하지 않다.
+
+## 다음 작업 후보
+
+- 현재 Flutter 인증 흐름을 다시 점검하고, 필요하다면 불필요한 디버그 로그를 정리한다.
+- 서버 로그인 API 계약과 `AuthService.login`의 요청/응답 형식을 다시 맞춘다.
+- Flutter 지도 이벤트와 Flask 서버 사이의 bounds 기반 시설물 조회 흐름을 정의한다.
+- 가로등과 보안등을 대상으로 viewport 기반 실시간 마커 로딩을 먼저 안정화한다.
+- 데이터가 많아질 경우 현재 위젯 기반 마커를 유지할지, 더 가벼운 이미지 기반 마커로 전환할지 결정한다.

@@ -196,6 +196,30 @@ Examples:
 
 This converts point-based public data into road-segment-based safety scores.
 
+## Map Marker Loading Strategy
+
+Facility markers should not be loaded for the entire city at once.
+
+Current direction:
+
+- Re-query facility markers when camera movement finishes.
+- Use the current visible map bounds as the primary query scope.
+- Prefer viewport-based loading over full-city loading.
+- Keep initial marker loading lightweight enough for smooth map interaction.
+
+Performance policy:
+
+- When zoomed out, reduce marker density or cluster markers.
+- When zoomed in, allow more detailed individual facility markers.
+- Start with street lights and security lights as the first live facility types.
+- Add more facility categories only after viewport loading is stable.
+
+Why this matters:
+
+- Full dataset loading creates too many overlays at once.
+- Bounds-based loading matches what the user is actually looking at.
+- This approach scales better for CCTV, emergency bells, and other future facility layers.
+
 ## Data Pipeline
 
 Expected flow:

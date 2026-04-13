@@ -1,6 +1,8 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:http/http.dart' as http;
 
 class MapScreen extends StatefulWidget {
   final double buttonBottom;
@@ -15,6 +17,65 @@ class _MapScreenState extends State<MapScreen> {
   NaverMapController? _mapController;
 
   static const NLatLng _defaultPosition = NLatLng(36.6424, 127.4890);
+
+  Future<NOverlayImage> _buildMarkerIcon() {
+    return NOverlayImage.fromWidget(
+      context: context,
+      size: const Size(26, 26),
+      widget: Container(
+        width: 26,
+        height: 26,
+        decoration: BoxDecoration(
+          color: const Color(0xFFEAB308),
+          shape: BoxShape.circle,
+          border: Border.all(color: Colors.white, width: 1.5),
+        ),
+        child: const Icon(
+          Icons.lightbulb_outlined,
+          color: Colors.white,
+          size: 12,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _loadFacilityMarkers() async {
+    if (_mapController == null) return;
+
+    print('_loadFacilityMarkers called');
+
+    final markerIcon = await _buildMarkerIcon();
+
+    final response = await http.get(
+      Uri.parse('http://10.0.2.2:5000/facilities'),
+    );
+
+    print('statusCode: ${response.statusCode}');
+    print('body: ${response.body}');
+
+    final data = jsonDecode(response.body);
+
+    if (data['success'] != true) return;
+    print('facilities count: ${(data['facilities'] as List).length}');
+
+    final List facilities = data['facilities'];
+
+    for (final item in facilities) {
+      print('marker: ${item['facility_id']} / ${item['lat']} / ${item['lng']}');
+      final marker = NMarker(
+        id: item['facility_id'].toString(),
+        position: NLatLng(
+          (item['lat'] as num).toDouble(),
+          (item['lng'] as num).toDouble(),
+        ),
+        icon: markerIcon,
+        size: const Size(26, 26),
+        anchor: const NPoint(0.5, 0.5),
+      );
+
+      await _mapController!.addOverlay(marker);
+    }
+  }
 
   Future<NLatLng?> _getCurrentLatLng() async {
     final serviceEnabled = await Geolocator.isLocationServiceEnabled();
@@ -81,8 +142,23 @@ class _MapScreenState extends State<MapScreen> {
               zoom: 14,
             ),
           ),
-          onMapReady: (controller) {
+          onMapReady: (controller) async {
             _mapController = controller;
+            await _loadFacilityMarkers();
+            //   final marker = NMarker(
+            //     id: 'test',
+            //     position: ,
+            //     icon: markerIcon,
+            //     size: const Size(26, 26),
+            //     anchor: const NPoint(0.5, 0.5),
+            //   );
+            //   await controller.addOverlay(marker);
+            //   // await controller.updateCamera(
+            //   //   NCameraUpdate.scrollAndZoomTo(
+            //   //     target: _cityHallPosition,
+            //   //     zoom: 15,
+            //   //   ),
+            //   // );
           },
         ),
         AnimatedPositioned(
