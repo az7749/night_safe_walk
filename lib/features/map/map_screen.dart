@@ -15,8 +15,15 @@ class MapScreen extends StatefulWidget {
 
 class _MapScreenState extends State<MapScreen> {
   NaverMapController? _mapController;
+  // 주석: 현재 화면 범위 기준 CCTV 마커 재조회/교체 상태값
+  NOverlayImage? _cctvMarkerIcon;
+  bool _isFetchingCctvMarkers = false;
+  String? _lastBoundsRequestKey;
 
   static const NLatLng _defaultPosition = NLatLng(36.6424, 127.4890);
+  // 주석: 줌 레벨이 너무 낮을 때는 CCTV 마커 조회를 생략
+  static const double _cctvVisibleZoomThreshold = 13;
+  static const int _defaultFacilityLimit = 200;
 
   Future<NOverlayImage> _buildMarkerIcon() {
     return NOverlayImage.fromWidget(
@@ -26,12 +33,12 @@ class _MapScreenState extends State<MapScreen> {
         width: 26,
         height: 26,
         decoration: BoxDecoration(
-          color: const Color(0xFFEAB308),
+          color: const Color(0xFF2563EB),
           shape: BoxShape.circle,
           border: Border.all(color: Colors.white, width: 1.5),
         ),
         child: const Icon(
-          Icons.lightbulb_outlined,
+          Icons.videocam_outlined,
           color: Colors.white,
           size: 12,
         ),
@@ -39,41 +46,105 @@ class _MapScreenState extends State<MapScreen> {
     );
   }
 
-  Future<void> _loadFacilityMarkers() async {
+  Future<NOverlayImage> _getCctvMarkerIcon() async {
+    return _cctvMarkerIcon ??= await _buildMarkerIcon();
+  }
+
+  String _buildBoundsRequestKey(NLatLngBounds bounds, double zoom) {
+    return [
+      bounds.southLatitude.toStringAsFixed(5),
+      bounds.westLongitude.toStringAsFixed(5),
+      bounds.northLatitude.toStringAsFixed(5),
+      bounds.eastLongitude.toStringAsFixed(5),
+      zoom.toStringAsFixed(2),
+    ].join('|');
+  }
+
+  Future<void> _clearCctvMarkers() async {
     if (_mapController == null) return;
+    // 주석: CCTV 마커는 매 재조회마다 교체되므로 기존 마커를 먼저 정리
+    await _mapController!.clearOverlays(type: NOverlayType.marker);
+  }
 
-    print('_loadFacilityMarkers called');
+  Future<void> _reloadCctvMarkersForVisibleBounds() async {
+    if (_mapController == null || _isFetchingCctvMarkers) return;
 
-    final markerIcon = await _buildMarkerIcon();
+    _isFetchingCctvMarkers = true;
 
-    final response = await http.get(
-      Uri.parse('http://10.0.2.2:5000/facilities'),
-    );
+    try {
+      final controller = _mapController!;
+      final cameraPosition = await controller.getCameraPosition();
+      final currentZoom = cameraPosition.zoom;
 
-    print('statusCode: ${response.statusCode}');
-    print('body: ${response.body}');
+      if (currentZoom < _cctvVisibleZoomThreshold) {
+        _lastBoundsRequestKey = null;
+        await _clearCctvMarkers();
+        debugPrint('CCTV marker load skipped at zoom $currentZoom');
+        return;
+      }
 
-    final data = jsonDecode(response.body);
+      final bounds = await controller.getContentBounds();
+      final requestKey = _buildBoundsRequestKey(bounds, currentZoom);
 
-    if (data['success'] != true) return;
-    print('facilities count: ${(data['facilities'] as List).length}');
+      if (_lastBoundsRequestKey == requestKey) {
+        debugPrint('CCTV marker request skipped for same bounds');
+        return;
+      }
 
-    final List facilities = data['facilities'];
+      _lastBoundsRequestKey = requestKey;
 
-    for (final item in facilities) {
-      print('marker: ${item['facility_id']} / ${item['lat']} / ${item['lng']}');
-      final marker = NMarker(
-        id: item['facility_id'].toString(),
-        position: NLatLng(
-          (item['lat'] as num).toDouble(),
-          (item['lng'] as num).toDouble(),
-        ),
-        icon: markerIcon,
-        size: const Size(26, 26),
-        anchor: const NPoint(0.5, 0.5),
+      // 주석: 현재 화면 bounds를 서버로 보내 CCTV만 다시 조회
+      final markerIcon = await _getCctvMarkerIcon();
+      final uri = Uri.parse('http://10.0.2.2:5000/facilities').replace(
+        queryParameters: {
+          'min_lat': bounds.southLatitude.toString(),
+          'max_lat': bounds.northLatitude.toString(),
+          'min_lng': bounds.westLongitude.toString(),
+          'max_lng': bounds.eastLongitude.toString(),
+          'limit': _defaultFacilityLimit.toString(),
+        },
       );
 
-      await _mapController!.addOverlay(marker);
+      final response = await http.get(uri);
+      debugPrint('CCTV statusCode: ${response.statusCode}');
+
+      if (response.statusCode != 200) {
+        debugPrint('CCTV body: ${response.body}');
+        return;
+      }
+
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+
+      if (data['success'] != true) {
+        debugPrint('CCTV load failed: ${data['message']}');
+        return;
+      }
+
+      final facilities = List<Map<String, dynamic>>.from(data['facilities']);
+      debugPrint('CCTV facilities count: ${facilities.length}');
+
+      await _clearCctvMarkers();
+
+      if (facilities.isEmpty) return;
+
+      final markers = facilities.map((item) {
+        return NMarker(
+          id: item['facility_id'].toString(),
+          position: NLatLng(
+            (item['lat'] as num).toDouble(),
+            (item['lng'] as num).toDouble(),
+          ),
+          icon: markerIcon,
+          size: const Size(26, 26),
+          anchor: const NPoint(0.5, 0.5),
+        );
+      }).toSet();
+
+      await controller.addOverlayAll(markers);
+    } catch (e) {
+      debugPrint('CCTV marker reload error: $e');
+    } finally {
+      _isFetchingCctvMarkers = false;
     }
   }
 
@@ -144,21 +215,11 @@ class _MapScreenState extends State<MapScreen> {
           ),
           onMapReady: (controller) async {
             _mapController = controller;
-            await _loadFacilityMarkers();
-            //   final marker = NMarker(
-            //     id: 'test',
-            //     position: ,
-            //     icon: markerIcon,
-            //     size: const Size(26, 26),
-            //     anchor: const NPoint(0.5, 0.5),
-            //   );
-            //   await controller.addOverlay(marker);
-            //   // await controller.updateCamera(
-            //   //   NCameraUpdate.scrollAndZoomTo(
-            //   //     target: _cityHallPosition,
-            //   //     zoom: 15,
-            //   //   ),
-            //   // );
+            await _reloadCctvMarkersForVisibleBounds();
+          },
+          // 주석: 카메라 이동이 끝날 때마다 현재 화면 범위 기준으로 CCTV 재조회
+          onCameraIdle: () {
+            _reloadCctvMarkersForVisibleBounds();
           },
         ),
         AnimatedPositioned(
