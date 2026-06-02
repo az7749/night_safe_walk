@@ -1,15 +1,24 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:http/http.dart' as http;
-import 'package:night_safe_walk/features/map/service/road_overlay_service.dart';
+
+import 'service/road_overlay_service.dart';
 
 class MapScreen extends StatefulWidget {
   final double buttonBottom;
+  final NLatLng? startPoint;
+  final NLatLng? destinationPoint;
+  final List<NLatLng> routePath;
+  final ValueChanged<NLatLng> onRoutePointSelected;
 
-  const MapScreen({super.key, required this.buttonBottom});
+  const MapScreen({
+    super.key,
+    required this.buttonBottom,
+    required this.startPoint,
+    required this.destinationPoint,
+    required this.routePath,
+    required this.onRoutePointSelected,
+  });
 
   @override
   State<MapScreen> createState() => _MapScreenState();
@@ -17,63 +26,64 @@ class MapScreen extends StatefulWidget {
 
 class _MapScreenState extends State<MapScreen> {
   NaverMapController? _mapController;
-  NOverlayImage? _cctvMarkerIcon;
-  NOverlayImage? _policeStationMarkerIcon;
-  bool _isFetchingFacilityMarkers = false;
-  String? _lastBoundsRequestKey;
+  NOverlayImage? _startPointMarkerIcon;
+  NOverlayImage? _destinationPointMarkerIcon;
+  bool _isFetchingRoadOverlays = false;
+  String? _lastRoadBoundsRequestKey;
 
   static const NLatLng _defaultPosition = NLatLng(36.6424, 127.4890);
-  static const double _facilityVisibleZoomThreshold = 13;
-  static const int _defaultFacilityLimit = 200;
+  static const double _roadVisibleZoomThreshold = 14;
+  static const String _startPointMarkerId = 'route_start_point';
+  static const String _destinationPointMarkerId = 'route_destination_point';
+  static const String _routePathOverlayId = 'selected_route_path';
 
-  Future<NOverlayImage> _buildCctvMarkerIcon() {
+  Future<NOverlayImage> _buildRoutePointMarkerIcon({
+    required String label,
+    required Color color,
+  }) {
     return NOverlayImage.fromWidget(
       context: context,
-      size: const Size(26, 26),
+      size: const Size(34, 34),
       widget: Container(
-        width: 26,
-        height: 26,
+        width: 34,
+        height: 34,
         decoration: BoxDecoration(
-          color: const Color(0xFF2563EB),
+          color: color,
           shape: BoxShape.circle,
-          border: Border.all(color: Colors.white, width: 1.5),
+          border: Border.all(color: Colors.white, width: 2),
+          boxShadow: const [
+            BoxShadow(
+              color: Colors.black26,
+              blurRadius: 6,
+              offset: Offset(0, 2),
+            ),
+          ],
         ),
-        child: const Icon(
-          Icons.videocam_outlined,
-          color: Colors.white,
-          size: 12,
+        alignment: Alignment.center,
+        child: Text(
+          label,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 13,
+            fontWeight: FontWeight.w800,
+          ),
         ),
       ),
     );
   }
 
-  Future<NOverlayImage> _buildPoliceStationMarkerIcon() {
-    return NOverlayImage.fromWidget(
-      context: context,
-      size: const Size(28, 28),
-      widget: Container(
-        width: 28,
-        height: 28,
-        decoration: BoxDecoration(
-          color: const Color(0xFF16A34A),
-          shape: BoxShape.circle,
-          border: Border.all(color: Colors.white, width: 1.5),
-        ),
-        child: const Icon(
-          Icons.local_police_outlined,
-          color: Colors.white,
-          size: 14,
-        ),
-      ),
+  Future<NOverlayImage> _getStartPointMarkerIcon() async {
+    return _startPointMarkerIcon ??= await _buildRoutePointMarkerIcon(
+      label: '출',
+      color: const Color(0xFF2563EB),
     );
   }
 
-  Future<NOverlayImage> _getCctvMarkerIcon() async {
-    return _cctvMarkerIcon ??= await _buildCctvMarkerIcon();
-  }
-
-  Future<NOverlayImage> _getPoliceStationMarkerIcon() async {
-    return _policeStationMarkerIcon ??= await _buildPoliceStationMarkerIcon();
+  Future<NOverlayImage> _getDestinationPointMarkerIcon() async {
+    return _destinationPointMarkerIcon ??= await _buildRoutePointMarkerIcon(
+      label: '도',
+      color: const Color(0xFFEF4444),
+    );
   }
 
   String _buildBoundsRequestKey(NLatLngBounds bounds, double zoom) {
@@ -86,99 +96,124 @@ class _MapScreenState extends State<MapScreen> {
     ].join('|');
   }
 
-  Future<void> _clearFacilityMarkers() async {
+  Future<void> _clearRoadOverlays() async {
     if (_mapController == null) return;
-    await _mapController!.clearOverlays(type: NOverlayType.marker);
+    await _mapController!.clearOverlays(type: NOverlayType.polylineOverlay);
   }
 
-  Future<void> _reloadFacilityMarkersForVisibleBounds() async {
-    if (_mapController == null || _isFetchingFacilityMarkers) return;
+  Future<void> _deleteRoutePathOverlay() async {
+    if (_mapController == null) return;
 
-    _isFetchingFacilityMarkers = true;
+    try {
+      await _mapController!.deleteOverlay(
+        NOverlayInfo(type: NOverlayType.polylineOverlay, id: _routePathOverlayId),
+      );
+    } catch (_) {
+      // 아직 추가되지 않은 경로선을 지울 때는 무시합니다.
+    }
+  }
+
+  Future<void> _deleteRoutePointMarker(String markerId) async {
+    if (_mapController == null) return;
+
+    try {
+      await _mapController!.deleteOverlay(
+        NOverlayInfo(type: NOverlayType.marker, id: markerId),
+      );
+    } catch (_) {
+      // 아직 추가되지 않은 마커를 지울 때는 무시합니다.
+    }
+  }
+
+  Future<void> _renderRoutePointMarkers() async {
+    if (_mapController == null) return;
+
+    await _deleteRoutePointMarker(_startPointMarkerId);
+    await _deleteRoutePointMarker(_destinationPointMarkerId);
+
+    final markers = <NMarker>{};
+
+    if (widget.startPoint != null) {
+      markers.add(
+        NMarker(
+          id: _startPointMarkerId,
+          position: widget.startPoint!,
+          icon: await _getStartPointMarkerIcon(),
+          size: const Size(34, 34),
+          anchor: const NPoint(0.5, 0.5),
+        ),
+      );
+    }
+
+    if (widget.destinationPoint != null) {
+      markers.add(
+        NMarker(
+          id: _destinationPointMarkerId,
+          position: widget.destinationPoint!,
+          icon: await _getDestinationPointMarkerIcon(),
+          size: const Size(34, 34),
+          anchor: const NPoint(0.5, 0.5),
+        ),
+      );
+    }
+
+    if (markers.isNotEmpty) {
+      await _mapController!.addOverlayAll(markers);
+    }
+  }
+
+  Future<void> _renderRoutePathOverlay() async {
+    if (_mapController == null) return;
+
+    await _deleteRoutePathOverlay();
+
+    if (widget.routePath.length < 2) return;
+
+    final routeOverlay = NPolylineOverlay(
+      id: _routePathOverlayId,
+      coords: widget.routePath,
+      width: 8,
+      color: const Color(0xFF6546FF),
+      lineCap: NLineCap.round,
+      lineJoin: NLineJoin.round,
+    );
+
+    await _mapController!.addOverlay(routeOverlay);
+  }
+
+  Future<void> _reloadRoadOverlaysForVisibleBounds() async {
+    if (_mapController == null || _isFetchingRoadOverlays) return;
+
+    _isFetchingRoadOverlays = true;
 
     try {
       final controller = _mapController!;
       final cameraPosition = await controller.getCameraPosition();
       final currentZoom = cameraPosition.zoom;
 
-      if (currentZoom < _facilityVisibleZoomThreshold) {
-        _lastBoundsRequestKey = null;
-        await _clearFacilityMarkers();
-        debugPrint('Facility marker load skipped at zoom $currentZoom');
+      if (currentZoom < _roadVisibleZoomThreshold) {
+        _lastRoadBoundsRequestKey = null;
+        await _clearRoadOverlays();
+        await _renderRoutePathOverlay();
+        debugPrint('Road overlay load skipped at zoom $currentZoom');
         return;
       }
 
       final bounds = await controller.getContentBounds();
       final requestKey = _buildBoundsRequestKey(bounds, currentZoom);
 
-      if (_lastBoundsRequestKey == requestKey) {
-        debugPrint('Facility marker request skipped for same bounds');
+      if (_lastRoadBoundsRequestKey == requestKey) {
+        debugPrint('Road overlay request skipped for same bounds');
         return;
       }
 
-      _lastBoundsRequestKey = requestKey;
-
-      final cctvMarkerIcon = await _getCctvMarkerIcon();
-      final policeStationMarkerIcon = await _getPoliceStationMarkerIcon();
-
-      final uri = Uri.parse('http://10.0.2.2:5000/facilities').replace(
-        queryParameters: {
-          'min_lat': bounds.southLatitude.toString(),
-          'max_lat': bounds.northLatitude.toString(),
-          'min_lng': bounds.westLongitude.toString(),
-          'max_lng': bounds.eastLongitude.toString(),
-          'limit': _defaultFacilityLimit.toString(),
-        },
-      );
-
-      final response = await http.get(uri);
-      debugPrint('Facility statusCode: ${response.statusCode}');
-
-      if (response.statusCode != 200) {
-        debugPrint('Facility body: ${response.body}');
-        return;
-      }
-
-      final data = jsonDecode(response.body) as Map<String, dynamic>;
-
-      if (data['success'] != true) {
-        debugPrint('Facility load failed: ${data['message']}');
-        return;
-      }
-
-      final facilities = List<Map<String, dynamic>>.from(data['facilities']);
-      debugPrint('Facility count: ${facilities.length}');
-
-      await _clearFacilityMarkers();
-
-      if (facilities.isEmpty) return;
-
-      final markers = facilities.map((item) {
-        final facilityType = item['type']?.toString().trim() ?? '';
-        final markerIcon = facilityType == 'police_station'
-            ? policeStationMarkerIcon
-            : cctvMarkerIcon;
-        final markerSize = facilityType == 'police_station'
-            ? const Size(28, 28)
-            : const Size(26, 26);
-
-        return NMarker(
-          id: '${facilityType}_${item['facility_id']}',
-          position: NLatLng(
-            (item['lat'] as num).toDouble(),
-            (item['lng'] as num).toDouble(),
-          ),
-          icon: markerIcon,
-          size: markerSize,
-          anchor: const NPoint(0.5, 0.5),
-        );
-      }).toSet();
-
-      await controller.addOverlayAll(markers);
+      _lastRoadBoundsRequestKey = requestKey;
+      await RoadOverlayService.loadRoadsForBounds(controller, bounds);
+      await _renderRoutePathOverlay();
     } catch (e) {
-      debugPrint('Facility marker reload error: $e');
+      debugPrint('Road overlay reload error: $e');
     } finally {
-      _isFetchingFacilityMarkers = false;
+      _isFetchingRoadOverlays = false;
     }
   }
 
@@ -200,13 +235,15 @@ class _MapScreenState extends State<MapScreen> {
     if (permission == LocationPermission.denied) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('위치 권한을 거부했습니다.')));
+      ).showSnackBar(const SnackBar(content: Text('위치 권한이 거부되었습니다.')));
       return null;
     }
 
     if (permission == LocationPermission.deniedForever) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('위치 권한이 영구적으로 거부되었습니다. 설정에서 허용해주세요.')),
+        const SnackBar(
+          content: Text('위치 권한이 영구적으로 거부되었습니다. 설정에서 허용해 주세요.'),
+        ),
       );
       return null;
     }
@@ -237,6 +274,20 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   @override
+  void didUpdateWidget(covariant MapScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (oldWidget.startPoint != widget.startPoint ||
+        oldWidget.destinationPoint != widget.destinationPoint) {
+      _renderRoutePointMarkers();
+    }
+
+    if (oldWidget.routePath != widget.routePath) {
+      _renderRoutePathOverlay();
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Stack(
       children: [
@@ -249,11 +300,15 @@ class _MapScreenState extends State<MapScreen> {
           ),
           onMapReady: (controller) async {
             _mapController = controller;
-            await RoadOverlayService.loadSampleRoads(controller);
-            await _reloadFacilityMarkersForVisibleBounds();
+            await _reloadRoadOverlaysForVisibleBounds();
+            await _renderRoutePointMarkers();
+            await _renderRoutePathOverlay();
           },
-          onCameraIdle: () {
-            _reloadFacilityMarkersForVisibleBounds();
+          onCameraIdle: () async {
+            await _reloadRoadOverlaysForVisibleBounds();
+          },
+          onMapTapped: (_, latLng) {
+            widget.onRoutePointSelected(latLng);
           },
         ),
         AnimatedPositioned(
