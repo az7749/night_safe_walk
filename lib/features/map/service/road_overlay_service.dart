@@ -7,23 +7,32 @@ import 'package:http/http.dart' as http;
 class RoadOverlayService {
   static const String _baseUrl = 'http://10.0.2.2:5000';
 
-  static Future<void> loadSampleRoads(NaverMapController controller) async {
+  static Future<void> loadRoadsForBounds(
+    NaverMapController controller,
+    NLatLngBounds bounds,
+  ) async {
     try {
-      final uri = Uri.parse(
-        '$_baseUrl/roads/sample',
-      ).replace(queryParameters: {'limit': '100'});
+      final uri = Uri.parse('$_baseUrl/roads').replace(
+        queryParameters: {
+          'min_lat': bounds.southLatitude.toString(),
+          'max_lat': bounds.northLatitude.toString(),
+          'min_lng': bounds.westLongitude.toString(),
+          'max_lng': bounds.eastLongitude.toString(),
+          'limit': '5000',
+        },
+      );
 
       final response = await http.get(uri).timeout(const Duration(seconds: 15));
-      debugPrint('Road sample statusCode: ${response.statusCode}');
+      debugPrint('Road statusCode: ${response.statusCode}');
 
       if (response.statusCode != 200) {
-        debugPrint('Road sample body: ${response.body}');
+        debugPrint('Road body: ${response.body}');
         return;
       }
 
       final data = jsonDecode(response.body) as Map<String, dynamic>;
       if (data['success'] != true) {
-        debugPrint('Road sample load failed: ${data['message']}');
+        debugPrint('Road load failed: ${data['message']}');
         return;
       }
 
@@ -54,7 +63,7 @@ class RoadOverlayService {
       debugPrint('Road overlay count: ${overlays.length}');
       await controller.addOverlayAll(overlays);
     } catch (e) {
-      debugPrint('Road sample load error: $e');
+      debugPrint('Road load error: $e');
     }
   }
 
