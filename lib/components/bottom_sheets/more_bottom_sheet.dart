@@ -1,7 +1,14 @@
 import 'package:flutter/material.dart';
 
 class MoreBottomSheet extends StatelessWidget {
-  const MoreBottomSheet({super.key});
+  final VoidCallback onProfileTap;
+  final VoidCallback onLogoutTap;
+
+  const MoreBottomSheet({
+    super.key,
+    required this.onProfileTap,
+    required this.onLogoutTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -35,9 +42,7 @@ class MoreBottomSheet extends StatelessWidget {
           _buildMenuButton(
             icon: Icons.person_outline,
             title: '내 정보',
-            onTap: () {
-              debugPrint('내 정보 클릭');
-            },
+            onTap: onProfileTap,
           ),
           // const SizedBox(height: 12),
 
@@ -72,9 +77,7 @@ class MoreBottomSheet extends StatelessWidget {
             icon: Icons.logout,
             title: '로그아웃',
             // isLogout: true,
-            onTap: () {
-              debugPrint('로그아웃 클릭');
-            },
+            onTap: onLogoutTap,
           ),
         ],
       ),

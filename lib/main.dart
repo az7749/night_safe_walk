@@ -26,7 +26,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: '야간안심보행플랫폼',
       theme: ThemeData(primarySwatch: Colors.blue),
-      home: const MainScreen(),
+      home: const LoginScreen(),
     );
   }
 }

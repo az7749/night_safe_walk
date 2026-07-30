@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:night_safe_walk/features/auth/screen/signup_screen.dart';
+import 'package:night_safe_walk/features/auth/screen/password_reset_screen.dart';
 import 'package:night_safe_walk/components/app_text_field.dart';
 import 'package:night_safe_walk/components/password_text_field.dart';
 import 'package:night_safe_walk/features/auth/logic/auth_logic.dart';
@@ -41,9 +42,13 @@ class _LoginScreen extends State<LoginScreen> {
       ).showSnackBar(SnackBar(content: Text(result['message'])));
 
       if (result['success'] == true) {
+        final user = result['user'] as Map<String, dynamic>;
+
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const MainScreen()),
+          MaterialPageRoute(
+            builder: (context) => MainScreen(userId: (user['id'] as num).toInt()),
+          ),
         );
       }
     } catch (e) {
@@ -100,7 +105,14 @@ class _LoginScreen extends State<LoginScreen> {
               Align(
                 alignment: Alignment.centerLeft,
                 child: TextButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const PasswordResetScreen(),
+                      ),
+                    );
+                  },
                   style: TextButton.styleFrom(
                     padding: EdgeInsets.zero,
                     minimumSize: Size.zero,
