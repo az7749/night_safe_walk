@@ -1,15 +1,18 @@
-﻿import 'dart:async';
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
 import 'package:geolocator/geolocator.dart';
 
+import '../report/screen/facility_report_screen.dart';
+import '../report/service/facility_report_service.dart';
 import 'service/nearby_facility_service.dart';
 import 'service/road_overlay_service.dart';
 import 'service/risk_zone_alert_service.dart';
 
 class MapScreen extends StatefulWidget {
   final double buttonBottom;
+  final int? userId;
   final NLatLng? startPoint;
   final NLatLng? destinationPoint;
   final List<NLatLng> routePath;
@@ -20,6 +23,7 @@ class MapScreen extends StatefulWidget {
   const MapScreen({
     super.key,
     required this.buttonBottom,
+    required this.userId,
     required this.startPoint,
     required this.destinationPoint,
     required this.routePath,
@@ -38,16 +42,19 @@ class _MapScreenState extends State<MapScreen> {
   NOverlayImage? _destinationPointMarkerIcon;
   NOverlayImage? _streetLightMarkerIcon;
   NOverlayImage? _securityLightMarkerIcon;
+  NOverlayImage? _reportedFacilityMarkerIcon;
   StreamSubscription<Position>? _positionSubscription;
   bool _isFetchingRoadOverlays = false;
   bool _isCheckingRiskRoad = false;
   bool _isInRiskZone = false;
   bool _isLoadingReportFacilities = false;
   bool _isShowingReportFacilities = false;
+  bool _isFetchingReportedFacilities = false;
   String? _lastRoadBoundsRequestKey;
   int? _lastAlertedRiskRoadId;
   DateTime? _lastRiskAlertAt;
   final Set<String> _reportFacilityMarkerIds = {};
+  final Set<String> _reportedFacilityMarkerIds = {};
 
   static const NLatLng _defaultPosition = NLatLng(36.6424, 127.4890);
   static const double _roadVisibleZoomThreshold = 14;
@@ -126,11 +133,7 @@ class _MapScreenState extends State<MapScreen> {
             ),
           ],
         ),
-        child: Icon(
-          icon,
-          color: color,
-          size: 21,
-        ),
+        child: Icon(icon, color: color, size: 21),
       ),
     );
   }
@@ -139,13 +142,41 @@ class _MapScreenState extends State<MapScreen> {
     if (type == 'street_light') {
       return _streetLightMarkerIcon ??= await _buildReportFacilityMarkerIcon(
         color: const Color(0xFFF59E0B),
-        icon: Icons.light_mode_outlined,
+        icon: Icons.lightbulb_outline_rounded,
       );
     }
 
     return _securityLightMarkerIcon ??= await _buildReportFacilityMarkerIcon(
       color: const Color(0xFF2563EB),
-      icon: Icons.shield_outlined,
+      icon: Icons.lightbulb_outline_rounded,
+    );
+  }
+
+  Future<NOverlayImage> _getReportedFacilityMarkerIcon() async {
+    return _reportedFacilityMarkerIcon ??= await NOverlayImage.fromWidget(
+      context: context,
+      size: const Size(38, 38),
+      widget: Container(
+        width: 38,
+        height: 38,
+        decoration: BoxDecoration(
+          color: const Color(0xFFE53935),
+          shape: BoxShape.circle,
+          border: Border.all(color: Colors.white, width: 2),
+          boxShadow: const [
+            BoxShadow(
+              color: Colors.black26,
+              blurRadius: 7,
+              offset: Offset(0, 2),
+            ),
+          ],
+        ),
+        child: const Icon(
+          Icons.report_problem_outlined,
+          color: Colors.white,
+          size: 22,
+        ),
+      ),
     );
   }
 
@@ -364,6 +395,37 @@ class _MapScreenState extends State<MapScreen> {
     }
   }
 
+  Future<void> _openFacilityReportForm(
+    BuildContext sheetContext,
+    NearbyFacility facility,
+  ) async {
+    final userId = widget.userId;
+    Navigator.pop(sheetContext);
+
+    if (userId == null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('로그인 후 신고할 수 있습니다.')));
+      return;
+    }
+
+    final created = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) =>
+            FacilityReportScreen(userId: userId, facility: facility),
+      ),
+    );
+
+    if (!mounted || created != true) return;
+
+    await _clearReportFacilityMarkers();
+    setState(() {
+      _isShowingReportFacilities = false;
+    });
+    await _reloadReportedFacilityMarkers();
+  }
+
   void _showFacilityReportSheet(NearbyFacility facility) {
     final facilityLabel = _facilityTypeLabel(facility.type);
 
@@ -448,14 +510,8 @@ class _MapScreenState extends State<MapScreen> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: FilledButton.icon(
-                      onPressed: () {
-                        Navigator.pop(sheetContext);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('신고 작성 화면은 다음 단계에서 연결됩니다.'),
-                          ),
-                        );
-                      },
+                      onPressed: () =>
+                          _openFacilityReportForm(sheetContext, facility),
                       style: FilledButton.styleFrom(
                         backgroundColor: const Color(0xFFE53935),
                         foregroundColor: Colors.white,
@@ -502,6 +558,208 @@ class _MapScreenState extends State<MapScreen> {
     }
 
     await _mapController!.addOverlayAll(markers);
+  }
+
+  String _reportTypeLabel(String type) {
+    switch (type) {
+      case 'not_working':
+        return '불이 켜지지 않음';
+      case 'flickering':
+        return '불빛이 깜빡임';
+      case 'damaged':
+        return '시설물 파손';
+      default:
+        return '기타';
+    }
+  }
+
+  String _reportStatusLabel(String status) {
+    switch (status) {
+      case 'checking':
+        return '확인 중';
+      case 'completed':
+        return '처리 완료';
+      case 'rejected':
+        return '반려';
+      default:
+        return '신고 접수';
+    }
+  }
+
+  Future<void> _clearReportedFacilityMarkers() async {
+    if (_mapController == null) return;
+
+    for (final markerId in _reportedFacilityMarkerIds.toList()) {
+      try {
+        await _mapController!.deleteOverlay(
+          NOverlayInfo(type: NOverlayType.marker, id: markerId),
+        );
+      } catch (_) {
+        // The marker may already have been removed by a map rebuild.
+      }
+    }
+
+    _reportedFacilityMarkerIds.clear();
+  }
+
+  void _showReportedFacilitySheet(ReportedFacility report) {
+    final facilityLabel = _facilityTypeLabel(report.facilityType);
+    final imageUrl = report.imageUrl;
+
+    showModalBottomSheet<void>(
+      context: context,
+      useSafeArea: true,
+      isScrollControlled: true,
+      showDragHandle: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+      ),
+      builder: (_) {
+        return SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(24, 4, 24, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(
+                    Icons.report_problem_outlined,
+                    color: Color(0xFFE53935),
+                    size: 28,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      '$facilityLabel 고장 신고',
+                      style: const TextStyle(
+                        fontSize: 19,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 5,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFEBEE),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      _reportStatusLabel(report.status),
+                      style: const TextStyle(
+                        color: Color(0xFFB3261E),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 18),
+              if (imageUrl != null) ...[
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: AspectRatio(
+                    aspectRatio: 4 / 3,
+                    child: Image.network(
+                      imageUrl,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, _, _) => const ColoredBox(
+                        color: Color(0xFFF1F5F9),
+                        child: Center(
+                          child: Icon(
+                            Icons.broken_image_outlined,
+                            color: Color(0xFF94A3B8),
+                            size: 36,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 18),
+              ],
+              Text(
+                _reportTypeLabel(report.reportType),
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              if (report.description.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Text(
+                  report.description,
+                  style: const TextStyle(
+                    color: Color(0xFF475569),
+                    fontSize: 15,
+                    height: 1.45,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _renderReportedFacilityMarkers(
+    List<ReportedFacility> reports,
+  ) async {
+    if (_mapController == null) return;
+
+    await _clearReportedFacilityMarkers();
+    if (reports.isEmpty) return;
+
+    final icon = await _getReportedFacilityMarkerIcon();
+    final markers = <NMarker>{};
+
+    for (final report in reports) {
+      final markerId = 'active_report_${report.reportId}';
+      _reportedFacilityMarkerIds.add(markerId);
+
+      final marker = NMarker(
+        id: markerId,
+        position: report.position,
+        icon: icon,
+        size: const Size(38, 38),
+        anchor: const NPoint(0.5, 0.5),
+      );
+      marker.setOnTapListener((_) {
+        _showReportedFacilitySheet(report);
+      });
+      markers.add(marker);
+    }
+
+    await _mapController!.addOverlayAll(markers);
+  }
+
+  Future<void> _reloadReportedFacilityMarkers() async {
+    if (_mapController == null || _isFetchingReportedFacilities) return;
+
+    _isFetchingReportedFacilities = true;
+    try {
+      final controller = _mapController!;
+      final cameraPosition = await controller.getCameraPosition();
+
+      if (cameraPosition.zoom < _roadVisibleZoomThreshold) {
+        await _clearReportedFacilityMarkers();
+        return;
+      }
+
+      final bounds = await controller.getContentBounds();
+      final reports = await FacilityReportService.loadMapReports(bounds);
+      await _renderReportedFacilityMarkers(reports);
+    } catch (e) {
+      debugPrint('Reported facility marker load error: $e');
+    } finally {
+      _isFetchingReportedFacilities = false;
+    }
   }
 
   Future<void> _toggleReportFacilities() async {
@@ -553,14 +811,14 @@ class _MapScreenState extends State<MapScreen> {
           ? '반경 30m 이내에 신고 가능한 시설물이 없습니다.'
           : '반경 30m 이내 시설물 ${facilities.length}개를 표시했습니다.';
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('주변 시설물을 불러오지 못했습니다: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('주변 시설물을 불러오지 못했습니다: $e')));
     } finally {
       if (mounted) {
         setState(() {
@@ -678,6 +936,7 @@ class _MapScreenState extends State<MapScreen> {
           onMapReady: (controller) async {
             _mapController = controller;
             await _reloadRoadOverlaysForVisibleBounds();
+            await _reloadReportedFacilityMarkers();
             await _renderRoutePointMarkers();
             await _renderRoutePathOverlay();
             await _startRiskZoneMonitoring();
@@ -687,6 +946,7 @@ class _MapScreenState extends State<MapScreen> {
           },
           onCameraIdle: () async {
             await _reloadRoadOverlaysForVisibleBounds();
+            await _reloadReportedFacilityMarkers();
           },
           onMapTapped: (_, latLng) {
             if (_isShowingReportFacilities) return;

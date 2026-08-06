@@ -11,6 +11,7 @@ import '../map/map_screen.dart';
 import '../map/service/place_search_service.dart';
 import '../map/service/route_api_service.dart';
 import '../map/widgets/search_panel.dart';
+import '../report/screen/report_history_screen.dart';
 
 class MainScreen extends StatefulWidget {
   final int? userId;
@@ -222,6 +223,7 @@ class _MainScreenState extends State<MainScreen> {
     } else {
       return MoreBottomSheet(
         onProfileTap: openProfileEdit,
+        onReportHistoryTap: openReportHistory,
         onLogoutTap: logout,
       );
     }
@@ -241,6 +243,28 @@ class _MainScreenState extends State<MainScreen> {
       context,
       MaterialPageRoute(
         builder: (context) => ProfileEditScreen(userId: userId),
+      ),
+    );
+  }
+
+  void openReportHistory() {
+    final userId = widget.userId;
+
+    if (userId == null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('로그인 정보가 없습니다.')));
+      return;
+    }
+
+    setState(() {
+      showSheet = false;
+    });
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ReportHistoryScreen(userId: userId),
       ),
     );
   }
@@ -395,6 +419,7 @@ class _MainScreenState extends State<MainScreen> {
               buttonBottom: showSheet
                   ? sheetHeight + navBarHeight - 70
                   : navBarHeight - 70,
+              userId: widget.userId,
               startPoint: startPoint,
               destinationPoint: destinationPoint,
               routePath: routePath,

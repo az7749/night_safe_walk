@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 
 class MoreBottomSheet extends StatelessWidget {
   final VoidCallback onProfileTap;
+  final VoidCallback onReportHistoryTap;
   final VoidCallback onLogoutTap;
 
   const MoreBottomSheet({
     super.key,
     required this.onProfileTap,
+    required this.onReportHistoryTap,
     required this.onLogoutTap,
   });
 
@@ -62,15 +64,13 @@ class MoreBottomSheet extends StatelessWidget {
           //     debugPrint('알림 설정 클릭');
           //   },
           // ),
-          // const SizedBox(height: 12),
+          const SizedBox(height: 12),
 
-          // _buildMenuButton(
-          //   icon: Icons.receipt_long_outlined,
-          //   title: '신고 내역',
-          //   onTap: () {
-          //     debugPrint('신고 내역 클릭');
-          //   },
-          // ),
+          _buildMenuButton(
+            icon: Icons.receipt_long_outlined,
+            title: '신고 내역',
+            onTap: onReportHistoryTap,
+          ),
           const SizedBox(height: 12),
 
           _buildMenuButton(

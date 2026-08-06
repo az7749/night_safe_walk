@@ -5,6 +5,7 @@ import 'package:night_safe_walk/components/app_text_field.dart';
 import 'package:night_safe_walk/components/password_text_field.dart';
 import 'package:night_safe_walk/features/auth/logic/auth_logic.dart';
 import 'package:night_safe_walk/features/auth/service/auth_service.dart';
+import 'package:night_safe_walk/features/admin/screen/admin_report_screen.dart';
 import 'package:night_safe_walk/features/main/main_screen.dart';
 import 'dart:async';
 
@@ -37,17 +38,23 @@ class _LoginScreen extends State<LoginScreen> {
         userid: userid,
         password: password,
       );
+      if (!mounted) return;
+
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(result['message'])));
 
       if (result['success'] == true) {
         final user = result['user'] as Map<String, dynamic>;
+        final userId = (user['id'] as num).toInt();
+        final role = user['role']?.toString() ?? 'user';
 
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => MainScreen(userId: (user['id'] as num).toInt()),
+            builder: (context) => role == 'admin'
+                ? AdminReportScreen(adminUserId: userId)
+                : MainScreen(userId: userId),
           ),
         );
       }
