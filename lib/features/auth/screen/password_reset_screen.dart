@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:night_safe_walk/components/app_text_field.dart';
 import 'package:night_safe_walk/components/password_text_field.dart';
 import 'package:night_safe_walk/features/auth/service/auth_service.dart';
+import 'package:night_safe_walk/utils/phone_number_formatter.dart';
 
 class PasswordResetScreen extends StatefulWidget {
   const PasswordResetScreen({super.key});
@@ -121,6 +122,7 @@ class _PasswordResetScreenState extends State<PasswordResetScreen> {
               AppTextField(
                 controller: phoneController,
                 keyboardType: TextInputType.phone,
+                inputFormatters: const [PhoneNumberInputFormatter()],
               ),
               const SizedBox(height: 24),
               const _FieldLabel('새 비밀번호'),

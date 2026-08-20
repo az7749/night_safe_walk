@@ -3,6 +3,7 @@ import 'package:night_safe_walk/features/auth/logic/auth_logic.dart';
 import 'package:night_safe_walk/features/auth/service/auth_service.dart';
 import 'package:night_safe_walk/components/app_text_field.dart';
 import 'package:night_safe_walk/components/password_text_field.dart';
+import 'package:night_safe_walk/utils/phone_number_formatter.dart';
 import 'dart:async';
 
 class SignUpScreen extends StatefulWidget {
@@ -156,6 +157,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 AppTextField(
                   controller: phoneController,
                   keyboardType: TextInputType.phone,
+                  inputFormatters: const [PhoneNumberInputFormatter()],
                 ),
                 SizedBox(height: 30),
                 Row(

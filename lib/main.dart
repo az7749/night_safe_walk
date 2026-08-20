@@ -1,11 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
 import 'package:night_safe_walk/features/auth/screen/login_screen.dart';
-import 'package:night_safe_walk/features/main/main_screen.dart';
+import 'package:night_safe_walk/features/alarm/service/background_risk_monitor_service.dart';
 // import 'package:night_safe_walk/features/main/main_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  try {
+    await BackgroundRiskMonitorService.initialize();
+  } catch (error, stackTrace) {
+    debugPrint('Background risk monitor setup failed: $error');
+    debugPrintStack(stackTrace: stackTrace);
+  }
 
   await FlutterNaverMap().init(
     clientId: 'ln6k6f22pj',

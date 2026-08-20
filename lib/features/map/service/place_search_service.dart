@@ -22,4 +22,25 @@ class PlaceSearchService {
 
     return List<Map<String, dynamic>>.from(data['places']);
   }
+
+  static Future<String> reverseGeocode({
+    required double latitude,
+    required double longitude,
+  }) async {
+    final uri = Uri.parse('$_baseUrl/reverse-geocode').replace(
+      queryParameters: {
+        'lat': latitude.toString(),
+        'lng': longitude.toString(),
+      },
+    );
+
+    final response = await http.get(uri).timeout(const Duration(seconds: 10));
+    final data = jsonDecode(response.body) as Map<String, dynamic>;
+
+    if (response.statusCode != 200 || data['success'] != true) {
+      throw Exception(data['message']?.toString() ?? '주소를 찾을 수 없습니다.');
+    }
+
+    return data['address']?.toString() ?? '';
+  }
 }

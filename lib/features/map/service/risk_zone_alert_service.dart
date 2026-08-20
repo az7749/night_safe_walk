@@ -30,10 +30,20 @@ class RiskZoneAlertService {
   static const String _baseUrl = 'http://10.0.2.2:5000';
 
   static Future<RiskRoadInfo?> findNearestRiskRoad(NLatLng point) async {
+    return findNearestRiskRoadByCoordinates(
+      latitude: point.latitude,
+      longitude: point.longitude,
+    );
+  }
+
+  static Future<RiskRoadInfo?> findNearestRiskRoadByCoordinates({
+    required double latitude,
+    required double longitude,
+  }) async {
     final uri = Uri.parse('$_baseUrl/roads/nearest-risk').replace(
       queryParameters: {
-        'lat': point.latitude.toString(),
-        'lng': point.longitude.toString(),
+        'lat': latitude.toString(),
+        'lng': longitude.toString(),
         'radius_m': '25',
         'threshold': '50',
       },
@@ -53,5 +63,27 @@ class RiskZoneAlertService {
     return RiskRoadInfo.fromJson(
       Map<String, dynamic>.from(data['road'] as Map),
     );
+  }
+
+  static Future<void> recordRiskZoneEntry({
+    required int userId,
+    required int roadId,
+  }) async {
+    final response = await http
+        .post(
+          Uri.parse('$_baseUrl/users/$userId/alarm-logs/risk-zone'),
+          headers: {'content-type': 'application/json'},
+          body: jsonEncode({'road_id': roadId}),
+        )
+        .timeout(const Duration(seconds: 5));
+    final data = jsonDecode(response.body) as Map<String, dynamic>;
+
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      throw Exception(data['message']?.toString() ?? '위험구역 알림 기록 실패');
+    }
+
+    if (data['success'] != true) {
+      throw Exception(data['message']?.toString() ?? '위험구역 알림 기록 실패');
+    }
   }
 }

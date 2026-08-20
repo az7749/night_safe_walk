@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class AppTextField extends StatefulWidget {
   final TextEditingController controller;
   final TextInputType? keyboardType;
+  final List<TextInputFormatter>? inputFormatters;
   final bool enabled;
 
   const AppTextField({
     super.key,
     required this.controller,
     this.keyboardType,
+    this.inputFormatters,
     this.enabled = true,
   });
 
@@ -62,6 +65,7 @@ class _AppTextFieldState extends State<AppTextField> {
       controller: widget.controller,
       focusNode: _focusNode,
       keyboardType: widget.keyboardType,
+      inputFormatters: widget.inputFormatters,
       enabled: widget.enabled,
       decoration: InputDecoration(
         filled: true,

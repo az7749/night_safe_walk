@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:night_safe_walk/components/app_text_field.dart';
 import 'package:night_safe_walk/components/password_text_field.dart';
 import 'package:night_safe_walk/features/auth/service/auth_service.dart';
+import 'package:night_safe_walk/utils/phone_number_formatter.dart';
 
 class ProfileEditScreen extends StatefulWidget {
   final int userId;
@@ -54,7 +55,9 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
       setState(() {
         loginIdController.text = user['login_id']?.toString() ?? '';
         nameController.text = user['name']?.toString() ?? '';
-        phoneController.text = user['phone']?.toString() ?? '';
+        phoneController.text = formatPhoneNumber(
+          user['phone']?.toString() ?? '',
+        );
         birthController.text = user['birth_date']?.toString() ?? '';
         selectedGender = user['gender']?.toString();
         isLoading = false;
@@ -225,6 +228,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                     AppTextField(
                       controller: phoneController,
                       keyboardType: TextInputType.phone,
+                      inputFormatters: const [PhoneNumberInputFormatter()],
                     ),
                     const SizedBox(height: 24),
                     const _FieldLabel('생년월일'),
@@ -305,9 +309,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                               borderRadius: BorderRadius.circular(14),
                             ),
                           ),
-                          child: Text(
-                            isChangingPassword ? '변경 중' : '비밀번호 저장',
-                          ),
+                          child: Text(isChangingPassword ? '변경 중' : '비밀번호 저장'),
                         ),
                       ),
                     ],

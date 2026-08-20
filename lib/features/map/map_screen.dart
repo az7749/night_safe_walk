@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
 import 'package:geolocator/geolocator.dart';
@@ -8,7 +6,6 @@ import '../report/screen/facility_report_screen.dart';
 import '../report/service/facility_report_service.dart';
 import 'service/nearby_facility_service.dart';
 import 'service/road_overlay_service.dart';
-import 'service/risk_zone_alert_service.dart';
 
 class MapScreen extends StatefulWidget {
   final double buttonBottom;
@@ -17,8 +14,7 @@ class MapScreen extends StatefulWidget {
   final NLatLng? destinationPoint;
   final List<NLatLng> routePath;
   final NLatLng? cameraTarget;
-  final ValueChanged<NLatLng> onRoutePointSelected;
-  final ValueChanged<bool> onRiskZoneChanged;
+  final void Function(NLatLng point, String? name) onPlaceSelected;
 
   const MapScreen({
     super.key,
@@ -28,8 +24,7 @@ class MapScreen extends StatefulWidget {
     required this.destinationPoint,
     required this.routePath,
     required this.cameraTarget,
-    required this.onRoutePointSelected,
-    required this.onRiskZoneChanged,
+    required this.onPlaceSelected,
   });
 
   @override
@@ -43,16 +38,11 @@ class _MapScreenState extends State<MapScreen> {
   NOverlayImage? _streetLightMarkerIcon;
   NOverlayImage? _securityLightMarkerIcon;
   NOverlayImage? _reportedFacilityMarkerIcon;
-  StreamSubscription<Position>? _positionSubscription;
   bool _isFetchingRoadOverlays = false;
-  bool _isCheckingRiskRoad = false;
-  bool _isInRiskZone = false;
   bool _isLoadingReportFacilities = false;
   bool _isShowingReportFacilities = false;
   bool _isFetchingReportedFacilities = false;
   String? _lastRoadBoundsRequestKey;
-  int? _lastAlertedRiskRoadId;
-  DateTime? _lastRiskAlertAt;
   final Set<String> _reportFacilityMarkerIds = {};
   final Set<String> _reportedFacilityMarkerIds = {};
 
@@ -828,79 +818,12 @@ class _MapScreenState extends State<MapScreen> {
     }
   }
 
-  Future<void> _startRiskZoneMonitoring() async {
-    if (_positionSubscription != null) return;
-
-    final currentLatLng = await _getCurrentLatLng();
-    if (currentLatLng == null) return;
-
-    await _checkRiskZone(currentLatLng);
-
-    _positionSubscription =
-        Geolocator.getPositionStream(
-          locationSettings: const LocationSettings(
-            accuracy: LocationAccuracy.high,
-            distanceFilter: 15,
-          ),
-        ).listen((position) {
-          final point = NLatLng(position.latitude, position.longitude);
-          _checkRiskZone(point);
-        });
-  }
-
-  Future<void> _checkRiskZone(NLatLng point) async {
-    if (_isCheckingRiskRoad) return;
-
-    _isCheckingRiskRoad = true;
-
-    try {
-      final riskRoad = await RiskZoneAlertService.findNearestRiskRoad(point);
-
-      if (!mounted) return;
-
-      final nextIsInRiskZone = riskRoad != null;
-
-      if (_isInRiskZone != nextIsInRiskZone) {
-        setState(() {
-          _isInRiskZone = nextIsInRiskZone;
-        });
-        widget.onRiskZoneChanged(nextIsInRiskZone);
-      }
-
-      if (riskRoad == null) {
-        _lastAlertedRiskRoadId = null;
-        return;
-      }
-
-      final now = DateTime.now();
-      final isSameRoad = _lastAlertedRiskRoadId == riskRoad.roadId;
-      final isCooldown =
-          _lastRiskAlertAt != null &&
-          now.difference(_lastRiskAlertAt!) < const Duration(seconds: 45);
-
-      if (isSameRoad && isCooldown) return;
-
-      _lastAlertedRiskRoadId = riskRoad.roadId;
-      _lastRiskAlertAt = now;
-    } catch (e) {
-      debugPrint('Risk zone check error: $e');
-    } finally {
-      _isCheckingRiskRoad = false;
-    }
-  }
-
   Future<void> _moveCameraTo(NLatLng target) async {
     if (_mapController == null) return;
 
     final cameraUpdate = NCameraUpdate.withParams(target: target, zoom: 16);
 
     await _mapController!.updateCamera(cameraUpdate);
-  }
-
-  @override
-  void dispose() {
-    _positionSubscription?.cancel();
-    super.dispose();
   }
 
   @override
@@ -932,6 +855,7 @@ class _MapScreenState extends State<MapScreen> {
               target: _defaultPosition,
               zoom: 14,
             ),
+            locale: NLocale('ko', 'KR'),
           ),
           onMapReady: (controller) async {
             _mapController = controller;
@@ -939,7 +863,6 @@ class _MapScreenState extends State<MapScreen> {
             await _reloadReportedFacilityMarkers();
             await _renderRoutePointMarkers();
             await _renderRoutePathOverlay();
-            await _startRiskZoneMonitoring();
             if (widget.cameraTarget != null) {
               await _moveCameraTo(widget.cameraTarget!);
             }
@@ -948,9 +871,13 @@ class _MapScreenState extends State<MapScreen> {
             await _reloadRoadOverlaysForVisibleBounds();
             await _reloadReportedFacilityMarkers();
           },
-          onMapTapped: (_, latLng) {
+          onMapLongTapped: (_, latLng) {
             if (_isShowingReportFacilities) return;
-            widget.onRoutePointSelected(latLng);
+            widget.onPlaceSelected(latLng, null);
+          },
+          onSymbolTapped: (symbolInfo) {
+            if (_isShowingReportFacilities) return;
+            widget.onPlaceSelected(symbolInfo.position, symbolInfo.caption);
           },
         ),
         AnimatedPositioned(

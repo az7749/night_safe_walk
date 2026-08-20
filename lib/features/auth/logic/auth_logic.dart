@@ -1,3 +1,5 @@
+import '../../../utils/phone_number_formatter.dart';
+
 class AuthLogic {
   static String? validateLogin({required String id, required String password}) {
     if (id.trim().isEmpty && password.trim().isEmpty) {
@@ -34,7 +36,8 @@ class AuthLogic {
       return '전화번호를 입력해주세요.';
     }
 
-    if (!RegExp(r'^[0-9]{10,11}$').hasMatch(phone.trim())) {
+    final phoneDigits = phoneNumberDigits(phone);
+    if (!RegExp(r'^01[016789]\d{7,8}$').hasMatch(phoneDigits)) {
       return '전화번호 형식이 올바르지 않습니다.';
     }
 
