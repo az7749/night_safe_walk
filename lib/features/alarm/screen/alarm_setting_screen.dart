@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../service/alarm_setting_service.dart';
 import '../service/background_risk_monitor_service.dart';
-import '../../map/service/route_preference_service.dart';
 
 class AlarmSettingScreen extends StatefulWidget {
   final int userId;
@@ -19,7 +18,6 @@ class _AlarmSettingScreenState extends State<AlarmSettingScreen> {
   bool _riskZoneAlert = true;
   bool _pushAlert = true;
   bool _vibrationAlert = true;
-  String _defaultRouteMode = RoutePreferenceService.safeMode;
   String? _errorMessage;
 
   @override
@@ -36,15 +34,11 @@ class _AlarmSettingScreenState extends State<AlarmSettingScreen> {
 
     try {
       final settings = await AlarmSettingService.loadSettings(widget.userId);
-      final defaultRouteMode = await RoutePreferenceService.loadDefaultMode(
-        widget.userId,
-      );
       if (!mounted) return;
       setState(() {
         _riskZoneAlert = settings.riskZoneAlert;
         _pushAlert = settings.pushAlert;
         _vibrationAlert = settings.vibrationAlert;
-        _defaultRouteMode = defaultRouteMode;
       });
     } catch (e) {
       if (!mounted) return;
@@ -75,10 +69,6 @@ class _AlarmSettingScreenState extends State<AlarmSettingScreen> {
       await AlarmSettingService.saveSettings(
         userId: widget.userId,
         settings: settings,
-      );
-      await RoutePreferenceService.saveDefaultMode(
-        widget.userId,
-        _defaultRouteMode,
       );
       await BackgroundRiskMonitorService.startOrUpdate(
         userId: widget.userId,
@@ -169,13 +159,6 @@ class _AlarmSettingScreenState extends State<AlarmSettingScreen> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
       children: [
-        const _SectionTitle(title: '경로 탐색'),
-        const SizedBox(height: 8),
-        _RouteModeSetting(
-          selectedMode: _defaultRouteMode,
-          onChanged: (mode) => setState(() => _defaultRouteMode = mode),
-        ),
-        const SizedBox(height: 22),
         const _SectionTitle(title: '알림'),
         const SizedBox(height: 8),
         _SettingTile(
@@ -221,67 +204,6 @@ class _SectionTitle extends StatelessWidget {
         color: Color(0xFF334155),
         fontSize: 14,
         fontWeight: FontWeight.w800,
-      ),
-    );
-  }
-}
-
-class _RouteModeSetting extends StatelessWidget {
-  final String selectedMode;
-  final ValueChanged<String> onChanged;
-
-  const _RouteModeSetting({
-    required this.selectedMode,
-    required this.onChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            '기본 경로',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-          ),
-          const SizedBox(height: 4),
-          const Text(
-            '도착지를 정하면 선택한 경로를 바로 탐색합니다.',
-            style: TextStyle(
-              color: Color(0xFF64748B),
-              fontSize: 13,
-              height: 1.35,
-            ),
-          ),
-          const SizedBox(height: 14),
-          SizedBox(
-            width: double.infinity,
-            child: SegmentedButton<String>(
-              segments: const [
-                ButtonSegment<String>(
-                  value: RoutePreferenceService.fastMode,
-                  icon: Icon(Icons.directions_walk_rounded),
-                  label: Text('빠른길'),
-                ),
-                ButtonSegment<String>(
-                  value: RoutePreferenceService.safeMode,
-                  icon: Icon(Icons.shield_outlined),
-                  label: Text('안전한길'),
-                ),
-              ],
-              selected: {selectedMode},
-              showSelectedIcon: false,
-              onSelectionChanged: (selection) => onChanged(selection.first),
-            ),
-          ),
-        ],
       ),
     );
   }

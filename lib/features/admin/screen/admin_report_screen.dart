@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../auth/screen/login_screen.dart';
 import '../../report/service/facility_report_service.dart';
 import '../service/admin_report_service.dart';
+import 'admin_management_screen.dart';
 
 class AdminReportScreen extends StatefulWidget {
   final int adminUserId;
@@ -102,9 +103,54 @@ class _AdminReportScreenState extends State<AdminReportScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
+      drawer: Drawer(
+        child: SafeArea(
+          child: ListView(
+            children: [
+              const ListTile(title: Text('관리자')),
+              ListTile(
+                leading: const Icon(Icons.assignment_outlined),
+                title: const Text('신고 관리'),
+                onTap: () => Navigator.pop(context),
+              ),
+              ListTile(
+                leading: const Icon(Icons.people_outline),
+                title: const Text('회원 관리'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => AdminManagementScreen(
+                        adminUserId: widget.adminUserId,
+                      ),
+                    ),
+                  );
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.location_on_outlined),
+                title: const Text('시설물 관리'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => AdminManagementScreen(
+                        adminUserId: widget.adminUserId,
+                        facilities: true,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
       appBar: AppBar(
         title: const Text('신고 관리'),
-        automaticallyImplyLeading: false,
+        automaticallyImplyLeading: true,
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.white,
         actions: [

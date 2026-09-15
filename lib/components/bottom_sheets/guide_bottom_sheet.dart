@@ -6,6 +6,7 @@ class GuideBottomSheet extends StatelessWidget {
   final NLatLng? destinationPoint;
   final bool isRouteLoading;
   final VoidCallback onReset;
+  final ValueChanged<String> onRouteSelected;
   final String? startPointName;
   final String? destinationPointName;
 
@@ -15,6 +16,7 @@ class GuideBottomSheet extends StatelessWidget {
     required this.destinationPoint,
     required this.isRouteLoading,
     required this.onReset,
+    required this.onRouteSelected,
     this.startPointName,
     this.destinationPointName,
   });
@@ -40,7 +42,7 @@ class GuideBottomSheet extends StatelessWidget {
           ),
         ],
       ),
-      child: Column(
+      child: SingleChildScrollView(child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
@@ -91,6 +93,23 @@ class GuideBottomSheet extends StatelessWidget {
               ],
             ),
           ),
+          const SizedBox(height: 12),
+          Row(children: [
+            for (final mode in ['fast', 'safe']) ...[
+              if (mode == 'safe') const SizedBox(width: 10),
+              Expanded(child: SizedBox(height: 48, child: FilledButton.icon(
+                onPressed: startPoint == null || destinationPoint == null || isRouteLoading
+                    ? null : () => onRouteSelected(mode),
+                style: FilledButton.styleFrom(
+                  backgroundColor: mode == 'fast' ? const Color(0xFF2563EB) : const Color(0xFF6546FF),
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+                icon: Icon(mode == 'fast' ? Icons.directions_walk_rounded : Icons.shield_outlined, size: 20),
+                label: FittedBox(child: Text(mode == 'fast' ? '빠른길' : '안전한길')),
+              ))),
+            ],
+          ]),
           if (isRouteLoading)
             const Padding(
               padding: EdgeInsets.only(top: 10),
@@ -101,7 +120,7 @@ class GuideBottomSheet extends StatelessWidget {
               ),
             ),
         ],
-      ),
+      )),
     );
   }
 }

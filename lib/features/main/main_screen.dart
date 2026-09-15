@@ -21,7 +21,6 @@ import '../map/map_screen.dart';
 import '../map/service/place_search_service.dart';
 import '../map/service/risk_zone_alert_service.dart';
 import '../map/service/route_api_service.dart';
-import '../map/service/route_preference_service.dart';
 import '../map/widgets/search_panel.dart';
 import '../report/screen/report_history_screen.dart';
 import '../sos/service/emergency_sos_service.dart';
@@ -54,13 +53,12 @@ class _MainScreenState extends State<MainScreen> {
   bool isSosLoading = false;
   bool isInRiskZone = false;
   bool riskZoneAlertEnabled = true;
-  String defaultRouteMode = RoutePreferenceService.safeMode;
   int favoriteRefreshToken = 0;
   StreamSubscription<bool>? riskZoneStateSubscription;
   List<Map<String, dynamic>> searchResults = [];
 
   final double navBarHeight = 80;
-  final double guideSheetHeight = 220;
+  final double guideSheetHeight = 300;
   final double favoriteSheetHeight = 320;
   final double moreSheetHeight = 476;
 
@@ -80,17 +78,8 @@ class _MainScreenState extends State<MainScreen> {
     riskZoneStateSubscription = BackgroundRiskMonitorService.riskZoneStates
         .listen(onRiskZoneChanged);
     loadAlarmSettings();
-    loadRoutePreference();
   }
 
-  Future<void> loadRoutePreference() async {
-    final userId = widget.userId;
-    if (userId == null) return;
-
-    final mode = await RoutePreferenceService.loadDefaultMode(userId);
-    if (!mounted) return;
-    setState(() => defaultRouteMode = mode);
-  }
 
   Future<void> loadAlarmSettings() async {
     final userId = widget.userId;
@@ -313,6 +302,7 @@ class _MainScreenState extends State<MainScreen> {
         destinationPointName: destinationPointName,
         isRouteLoading: isRouteLoading,
         onReset: resetRoutePoints,
+        onRouteSelected: loadRoute,
       );
     } else if (selectedIndex == 1) {
       final selectedPlace = destinationPoint ?? startPoint;
@@ -421,7 +411,6 @@ class _MainScreenState extends State<MainScreen> {
 
     if (changed == true && mounted) {
       await loadAlarmSettings();
-      await loadRoutePreference();
     }
   }
 
@@ -581,7 +570,6 @@ class _MainScreenState extends State<MainScreen> {
 
   void selectRoutePoint(NLatLng point, {String? name}) {
     final isStartSelection = startPoint == null || destinationPoint != null;
-    final shouldLoadRoute = startPoint != null && destinationPoint == null;
 
     setState(() {
       selectedIndex = 0;
@@ -607,9 +595,6 @@ class _MainScreenState extends State<MainScreen> {
       );
     }
 
-    if (shouldLoadRoute) {
-      unawaited(loadRoute(defaultRouteMode));
-    }
   }
 
   void openPlaceActions(NLatLng point, String? name) {
@@ -702,7 +687,6 @@ class _MainScreenState extends State<MainScreen> {
       cameraTarget = point;
       routePath = [];
     });
-    unawaited(loadRoute(defaultRouteMode));
   }
 
   Future<void> loadRoutePointAddress(
@@ -827,7 +811,6 @@ class _MainScreenState extends State<MainScreen> {
       routePath = [];
       searchController.text = favorite.alias;
     });
-    unawaited(loadRoute(defaultRouteMode));
   }
 
   void resetRoutePoints() {
